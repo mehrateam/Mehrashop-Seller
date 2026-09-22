@@ -1,19 +1,23 @@
+"use client"
+
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   ChartBarIcon,
   GearSixIcon,
   PackageIcon,
+  PaintBrushIcon,
   SquaresFourIcon,
   StorefrontIcon,
   ShoppingCartIcon,
-} from "@phosphor-icons/react/dist/ssr"
+} from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 
 const groups = [
   {
     label: "نمای کلی",
     items: [
-      { href: "/", label: "داشبورد", icon: SquaresFourIcon, active: true },
+      { href: "/", label: "داشبورد", icon: SquaresFourIcon },
       { href: "#", label: "آمار و تحلیل", icon: ChartBarIcon },
     ],
   },
@@ -27,11 +31,16 @@ const groups = [
   },
   {
     label: "سیستم",
-    items: [{ href: "#", label: "تنظیمات", icon: GearSixIcon }],
+    items: [
+      { href: "/uikit", label: "کیت رابط کاربری", icon: PaintBrushIcon },
+      { href: "#", label: "تنظیمات", icon: GearSixIcon },
+    ],
   },
 ]
 
 export default function Sidebar() {
+  const pathname = usePathname()
+
   return (
     <aside className="sticky top-5 hidden h-[calc(100svh-2.5rem)] w-64 shrink-0 flex-col rounded-2xl border bg-card p-5 shadow-sm lg:flex">
       <div className="mb-6 flex items-center gap-3 border-b pb-5">
@@ -48,20 +57,23 @@ export default function Sidebar() {
               {group.label}
             </p>
             <ul className="space-y-1">
-              {group.items.map((item) => (
-                <li key={item.label}>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                      item.active && "bg-primary/10 font-semibold text-primary"
-                    )}
-                  >
-                    <item.icon className="size-4.5" />
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
+              {group.items.map((item) => {
+                const active = item.href !== "#" && pathname === item.href
+                return (
+                  <li key={item.label}>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                        active && "bg-primary/10 font-semibold text-primary"
+                      )}
+                    >
+                      <item.icon className="size-4.5" />
+                      {item.label}
+                    </Link>
+                  </li>
+                )
+              })}
             </ul>
           </div>
         ))}
