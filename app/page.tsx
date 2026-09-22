@@ -9,9 +9,17 @@ import {
   StorefrontIcon,
   UsersIcon,
 } from "@phosphor-icons/react/dist/ssr"
+import RevenueChart from "@/components/dashboard/RevenueChart"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+const traffic = [
+  { name: "ورود مستقیم", value: 48 },
+  { name: "موتورهای جستجو", value: 32 },
+  { name: "شبکه‌های اجتماعی", value: 14 },
+  { name: "لینک ارجاعی", value: 6 },
+]
 
 const metrics = [
   { title: "بازدیدها", value: "۱۲,۴۸۰", icon: EyeIcon },
@@ -106,6 +114,47 @@ export default function HomePage() {
             </CardContent>
           </Card>
         ))}
+      </section>
+
+      <section className="grid gap-5 xl:grid-cols-[2fr_1fr]">
+        <Card className="rounded-2xl ring-foreground/5">
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>نمای کلی درآمد</CardTitle>
+            <div className="flex rounded-lg border bg-muted p-0.5">
+              {["۷روز", "۳۰روز", "۳ماه", "۱سال"].map((label, i) => (
+                <button
+                  key={label}
+                  type="button"
+                  className={`rounded-md px-3 py-1.5 text-xs font-semibold ${i === 1 ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <RevenueChart />
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl ring-foreground/5">
+          <CardHeader>
+            <CardTitle>منابع ترافیک</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            {traffic.map((item) => (
+              <div key={item.name} className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="font-semibold">{item.name}</span>
+                  <span className="text-muted-foreground">{item.value}٪</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div className="h-full rounded-full bg-primary" style={{ width: `${item.value}%` }} />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
