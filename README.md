@@ -1,5 +1,12 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## 🚀 Git Commit Guidelines
+
+- `feat:` for new features
+- `fix:` for bug fixes
+- `refactor:` for code refactoring that does not add features or fix bugs
+- `remove:` remove codes or packages
+
 ## Getting Started
 
 First, run the development server:
