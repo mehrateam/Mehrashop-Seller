@@ -52,22 +52,6 @@ export default function HomePage() {
   return (
     <>
       <Card className="rounded-2xl ring-foreground/5">
-        <CardHeader className="flex-row items-center justify-between gap-4">
-          <div>
-            <CardTitle className="text-xl font-bold tracking-tight">روز بخیر</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">خلاصه وضعیت امروز فروشگاه شما</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="lg">خروجی</Button>
-            <Button size="lg">
-              <PlusIcon data-icon="inline-start" />
-              محصول جدید
-            </Button>
-          </div>
-        </CardHeader>
-      </Card>
-
-      <Card className="rounded-2xl ring-foreground/5">
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>بازدید و فروش</CardTitle>
           <div className="flex rounded-lg border bg-muted p-0.5">

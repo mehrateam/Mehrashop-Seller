@@ -1,5 +1,8 @@
-import { BellIcon, MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr"
+"use client"
+
+import { BellIcon, MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
+import { UserProfile } from "@/components/layout/UserProfile"
 
 export default function Header() {
   return (
@@ -21,15 +24,7 @@ export default function Header() {
           <span className="absolute top-2.5 end-2.5 size-1.5 rounded-full border-2 border-card bg-primary" />
         </Button>
 
-        <div className="hidden items-center gap-3 border-s ps-3 sm:flex">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-foreground text-sm font-semibold text-background">
-            ف
-          </div>
-          <div className="leading-tight">
-            <p className="text-sm font-semibold">فروشنده</p>
-            <p className="text-xs text-muted-foreground">مدیر فروشگاه</p>
-          </div>
-        </div>
+        <UserProfile />
       </div>
     </header>
   )
