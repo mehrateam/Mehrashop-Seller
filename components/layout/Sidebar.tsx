@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import {
   ChartBarIcon,
   GearSixIcon,
+  HeadsetIcon,
   PackageIcon,
   PaintBrushIcon,
   SquaresFourIcon,
@@ -26,6 +27,7 @@ const groups = [
     items: [
       { href: "#", label: "محصولات", icon: PackageIcon },
       { href: "#", label: "سفارش‌ها", icon: ShoppingCartIcon },
+      { href: "/support", label: "پشتیبانی", icon: HeadsetIcon },
       { href: "#", label: "فروشگاه", icon: StorefrontIcon },
     ],
   },
@@ -58,7 +60,9 @@ export default function Sidebar() {
             </p>
             <ul className="space-y-1">
               {group.items.map((item) => {
-                const active = item.href !== "#" && pathname === item.href
+                const active =
+                  item.href !== "#" &&
+                  (item.href === "/" ? pathname === "/" : pathname.startsWith(item.href))
                 return (
                   <li key={item.label}>
                     <Link
