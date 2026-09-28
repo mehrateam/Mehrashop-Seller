@@ -1,18 +1,24 @@
 "use client"
 
-import { useEffect, useSyncExternalStore, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import { isAuthenticated } from "@/lib/auth"
-
-const subscribe = () => () => {}
+import { ensureSession } from "@/lib/auth"
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const router = useRouter()
-  const ok = useSyncExternalStore(subscribe, isAuthenticated, () => false)
+  const [ok, setOk] = useState(false)
 
   useEffect(() => {
-    if (!ok) router.replace("/login")
-  }, [ok, router])
+    let alive = true
+    ensureSession().then((authed) => {
+      if (!alive) return
+      if (authed) setOk(true)
+      else router.replace("/login")
+    })
+    return () => {
+      alive = false
+    }
+  }, [router])
 
   if (!ok) return null
   return children

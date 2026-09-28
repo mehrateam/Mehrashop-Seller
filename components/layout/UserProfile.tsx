@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { getDisplayName, getUser, logout } from "@/lib/auth"
 
@@ -39,7 +40,11 @@ export function UserProfile() {
         onClick={() => setOpen((v) => !v)}
       >
         <div className="avatar">
-          {profileImage ? <img src={profileImage} alt={name} /> : initial}
+          {profileImage ? (
+            <Image src={profileImage} alt={name} width={42} height={42} />
+          ) : (
+            initial
+          )}
         </div>
         <div className="user-info">
           <span className="user-name">{name}</span>
@@ -81,7 +86,11 @@ export function UserProfile() {
 
                 <div className="user-menu-head">
                   <div className="avatar user-menu-avatar">
-                    {profileImage ? <img src={profileImage} alt={name} /> : initial}
+                    {profileImage ? (
+                      <Image src={profileImage} alt={name} width={42} height={42} />
+                    ) : (
+                      initial
+                    )}
                   </div>
                   <div className="user-info">
                     <span id="user-menu-title" className="user-name">

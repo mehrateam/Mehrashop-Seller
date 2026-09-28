@@ -1,16 +1,11 @@
 "use client"
 
-import { useState, useSyncExternalStore } from "react"
+import { useState } from "react"
 import { CheckIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 
 const FLAG = "show_welcome_modal"
-const subscribe = () => () => {}
-
-function readFlag() {
-  return sessionStorage.getItem(FLAG) === "1"
-}
 
 export function WelcomeModal({
   title = "خوش آمدید",
@@ -19,13 +14,13 @@ export function WelcomeModal({
   title?: string
   message?: string
 }) {
-  const flagged = useSyncExternalStore(subscribe, readFlag, () => false)
-  const [dismissed, setDismissed] = useState(false)
-  const open = flagged && !dismissed
+  const [open, setOpen] = useState(
+    () => typeof window !== "undefined" && sessionStorage.getItem(FLAG) === "1"
+  )
 
   function close() {
     sessionStorage.removeItem(FLAG)
-    setDismissed(true)
+    setOpen(false)
   }
 
   return (

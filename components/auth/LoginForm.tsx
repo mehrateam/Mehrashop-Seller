@@ -1,26 +1,32 @@
 "use client"
 
-import { useEffect, useState, useSyncExternalStore, type FormEvent } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import { StorefrontIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { isAuthenticated, login } from "@/lib/auth"
-
-const subscribe = () => () => {}
+import { ensureSession, login } from "@/lib/auth"
 
 export function LoginForm() {
   const router = useRouter()
-  const authed = useSyncExternalStore(subscribe, isAuthenticated, () => false)
+  const [ready, setReady] = useState(false)
   const [phoneEmail, setPhoneEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (authed) router.replace("/")
-  }, [authed, router])
+    let alive = true
+    ensureSession().then((authed) => {
+      if (!alive) return
+      if (authed) router.replace("/")
+      else setReady(true)
+    })
+    return () => {
+      alive = false
+    }
+  }, [router])
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -36,6 +42,8 @@ export function LoginForm() {
       setLoading(false)
     }
   }
+
+  if (!ready) return null
 
   return (
     <form
