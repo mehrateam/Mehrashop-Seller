@@ -1,15 +1,11 @@
 import {
-  ChatCircleIcon,
   CheckIcon,
   CreditCardIcon,
-  EyeIcon,
-  PackageIcon,
   PlusIcon,
   ShoppingCartIcon,
-  StorefrontIcon,
-  UsersIcon,
 } from "@phosphor-icons/react/dist/ssr"
 import RevenueChart from "@/components/dashboard/RevenueChart"
+import StatsCards from "@/components/dashboard/StatsCards"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,19 +15,6 @@ const traffic = [
   { name: "موتورهای جستجو", value: 32 },
   { name: "شبکه‌های اجتماعی", value: 14 },
   { name: "لینک ارجاعی", value: 6 },
-]
-
-const metrics = [
-  { title: "بازدیدها", value: "۱۲,۴۸۰", icon: EyeIcon },
-  { title: "فروش", value: "۸۴,۲۰۰,۰۰۰", icon: CreditCardIcon, suffix: "تومان" },
-  { title: "سفارش‌ها", value: "۳۴۲", icon: ShoppingCartIcon },
-]
-
-const counts = [
-  { title: "محصولات", value: "۱۲۸", icon: PackageIcon },
-  { title: "فروشگاه", value: "۱", icon: StorefrontIcon },
-  { title: "مشتریان", value: "۱,۲۴۰", icon: UsersIcon },
-  { title: "نظرات", value: "۸۶", icon: ChatCircleIcon },
 ]
 
 const orders = [
@@ -51,54 +34,7 @@ const activities = [
 export default function HomePage() {
   return (
     <>
-      <Card className="rounded-2xl ring-foreground/5">
-        <CardHeader className="flex-row items-center justify-between">
-          <CardTitle>بازدید و فروش</CardTitle>
-          <div className="flex rounded-lg border bg-muted p-0.5">
-            {["روز", "هفته", "ماه"].map((label, i) => (
-              <button
-                key={label}
-                type="button"
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold ${i === 2 ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-3">
-          {metrics.map((item) => (
-            <div key={item.title} className="rounded-xl border bg-muted/40 p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-semibold text-muted-foreground">{item.title}</span>
-                <div className="flex size-9 items-center justify-center rounded-lg border bg-card text-muted-foreground">
-                  <item.icon className="size-4.5" />
-                </div>
-              </div>
-              <p className="text-2xl font-bold tracking-tight">
-                {item.value}
-                {item.suffix && <span className="ms-1 text-xs font-medium text-muted-foreground">{item.suffix}</span>}
-              </p>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {counts.map((item) => (
-          <Card key={item.title} className="rounded-2xl ring-foreground/5 transition-shadow hover:shadow-md">
-            <CardContent className="pt-(--card-spacing)">
-              <div className="mb-4 flex items-center justify-between">
-                <span className="text-sm font-semibold text-muted-foreground">{item.title}</span>
-                <div className="flex size-9 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
-                  <item.icon className="size-4.5" />
-                </div>
-              </div>
-              <p className="text-2xl font-bold tracking-tight">{item.value}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </section>
+      <StatsCards />
 
       <section className="grid gap-5 xl:grid-cols-[2fr_1fr]">
         <Card className="rounded-2xl ring-foreground/5">
