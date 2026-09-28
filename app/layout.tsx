@@ -3,7 +3,10 @@ import "./fonts.css"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "مهراشاپ — پنل فروشنده",
+  title: {
+    default: "پنل مدیریت فروشنده مهراشاپ",
+    template: "%s | پنل مدیریت فروشنده مهراشاپ",
+  },
   description: "پنل مدیریت فروشنده مهراشاپ",
 }
 

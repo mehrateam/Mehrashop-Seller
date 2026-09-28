@@ -7,6 +7,8 @@ export type SellerUser = {
   last_name: string
   phone_number: string
   email: string
+  profile_image: string
+  store_username: string
 }
 
 type ApiResult<T> = {

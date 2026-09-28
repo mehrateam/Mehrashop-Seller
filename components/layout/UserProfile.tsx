@@ -1,31 +1,24 @@
 "use client"
 
-import { useEffect, useState, useSyncExternalStore } from "react"
+import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
 import { getDisplayName, getUser, logout } from "@/lib/auth"
 
-const links = [
-  { href: "https://mehrashop.com/", label: "نمایش سایت", hint: "mehrashop.com", icon: "globe" as const },
-  { href: "https://mehrashop.com/blogs", label: "نمایش بلاگ", hint: "mehrashop.com/blogs", icon: "book" as const },
-]
-
-const subscribe = () => () => {}
-
-function readName() {
-  return getDisplayName(getUser())
-}
-
 export function UserProfile() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const name = useSyncExternalStore(subscribe, readName, () => "فروشنده")
+  const [user] = useState(() => getUser())
+  const name = getDisplayName(user)
+  const profileImage = user?.profile_image || ""
+  const storeUsername = user?.store_username || ""
   const initial = name.charAt(0) || "ف"
+  const storeUrl = storeUsername ? `https://mehrashop.com/seller/${storeUsername}` : ""
 
   useEffect(() => {
     if (!open) return
     document.body.style.overflow = "hidden"
-    function onKey(e: KeyboardEvent) {
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false)
     }
     addEventListener("keydown", onKey)
@@ -35,14 +28,6 @@ export function UserProfile() {
     }
   }, [open])
 
-  const close = () => setOpen(false)
-  const toggle = () => setOpen((v) => !v)
-
-  async function onLogout() {
-    await logout()
-    router.replace("/login")
-  }
-
   return (
     <div className="user-profile">
       <button
@@ -51,9 +36,11 @@ export function UserProfile() {
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-controls="user-menu"
-        onClick={toggle}
+        onClick={() => setOpen((v) => !v)}
       >
-        <div className="avatar">{initial}</div>
+        <div className="avatar">
+          {profileImage ? <img src={profileImage} alt={name} /> : initial}
+        </div>
         <div className="user-info">
           <span className="user-name">{name}</span>
           <span className="user-role">مدیر فروشگاه</span>
@@ -74,7 +61,7 @@ export function UserProfile() {
 
       {open
         ? createPortal(
-            <div id="user-menu" className="user-menu" onClick={close}>
+            <div id="user-menu" className="user-menu" onClick={() => setOpen(false)}>
               <div
                 className="user-menu-panel"
                 role="dialog"
@@ -83,12 +70,19 @@ export function UserProfile() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="user-menu-handle" aria-hidden="true" />
-                <button className="user-menu-close" type="button" aria-label="بستن" onClick={close}>
+                <button
+                  className="user-menu-close"
+                  type="button"
+                  aria-label="بستن"
+                  onClick={() => setOpen(false)}
+                >
                   ×
                 </button>
 
                 <div className="user-menu-head">
-                  <div className="avatar user-menu-avatar">{initial}</div>
+                  <div className="avatar user-menu-avatar">
+                    {profileImage ? <img src={profileImage} alt={name} /> : initial}
+                  </div>
                   <div className="user-info">
                     <span id="user-menu-title" className="user-name">
                       {name}
@@ -98,30 +92,52 @@ export function UserProfile() {
                 </div>
 
                 <nav className="user-menu-list">
-                  {links.map((link) => (
+                  <a
+                    className="user-menu-item"
+                    href="https://mehrashop.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <span className="user-menu-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20" />
+                      </svg>
+                    </span>
+                    <span className="user-menu-copy">
+                      <span>نمایش سایت</span>
+                      <small>mehrashop.com</small>
+                    </span>
+                    <svg
+                      className="user-menu-arrow"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M7 17L17 7M7 7h10v10" />
+                    </svg>
+                  </a>
+
+                  {storeUrl ? (
                     <a
-                      key={link.href}
                       className="user-menu-item"
-                      href={link.href}
+                      href={storeUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       <span className="user-menu-icon">
-                        {link.icon === "globe" ? (
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20" />
-                          </svg>
-                        ) : (
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                            <path d="M4 4.5A2.5 2.5 0 0 1 6.5 7H20v13H6.5A2.5 2.5 0 0 1 4 17.5z" />
-                          </svg>
-                        )}
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                          <polyline points="9 22 9 12 15 12 15 22" />
+                        </svg>
                       </span>
                       <span className="user-menu-copy">
-                        <span>{link.label}</span>
-                        <small>{link.hint}</small>
+                        <span>نمایش فروشنده سایت</span>
+                        <small>mehrashop.com/seller/{storeUsername}</small>
                       </span>
                       <svg
                         className="user-menu-arrow"
@@ -136,11 +152,18 @@ export function UserProfile() {
                         <path d="M7 17L17 7M7 7h10v10" />
                       </svg>
                     </a>
-                  ))}
+                  ) : null}
 
                   <div className="user-menu-sep" />
 
-                  <button className="user-menu-item user-menu-item--danger" type="button" onClick={onLogout}>
+                  <button
+                    className="user-menu-item user-menu-item--danger"
+                    type="button"
+                    onClick={async () => {
+                      await logout()
+                      router.replace("/login")
+                    }}
+                  >
                     <span className="user-menu-icon">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />

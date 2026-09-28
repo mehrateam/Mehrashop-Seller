@@ -1,3 +1,3 @@
 bun run build || exit 1
-cp -r dist ../Builded/Mehrashop-Seller/
+cp -r out ../Builded/Mehrashop-Seller/
 code-insiders ../Builded/Mehrashop-Seller/
