@@ -1,7 +1,7 @@
 "use client"
 
-import { BellIcon, MagnifyingGlassIcon } from "@phosphor-icons/react"
-import { Button } from "@/components/ui/button"
+import { MagnifyingGlassIcon } from "@phosphor-icons/react"
+import { NotifyBell } from "@/components/layout/NotifyBell"
 import { UserProfile } from "@/components/layout/UserProfile"
 
 export default function Header() {
@@ -19,11 +19,7 @@ export default function Header() {
       </button>
 
       <div className="ms-4 flex items-center gap-3">
-        <Button variant="outline" size="icon" className="relative size-11 rounded-xl">
-          <BellIcon className="size-4.5" />
-          <span className="absolute top-2.5 end-2.5 size-1.5 rounded-full border-2 border-card bg-primary" />
-        </Button>
-
+        <NotifyBell />
         <UserProfile />
       </div>
     </header>

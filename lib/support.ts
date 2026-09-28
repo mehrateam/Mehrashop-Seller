@@ -121,3 +121,20 @@ export async function postTicket(id: string, action: "close" | "reopen" | "satis
     })
   )
 }
+
+export type NotifSummary = {
+  answered: number
+  open: number
+  in_review: number
+  total: number
+}
+
+export async function fetchNotifSummary() {
+  return read<NotifSummary>(await apiFetch("/dashboard/api/02/seller/notifications/"))
+}
+
+export async function readNotifications() {
+  return read<{ unread: number }>(
+    await apiFetch(`${ROOT}/notifications/read/`, { method: "POST" })
+  )
+}
