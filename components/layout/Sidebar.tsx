@@ -26,7 +26,7 @@ const groups = [
     label: "مدیریت",
     items: [
       { href: "#", label: "محصولات", icon: PackageIcon },
-      { href: "#", label: "سفارش‌ها", icon: ShoppingCartIcon },
+      { href: "/orders", label: "سفارش‌ها", icon: ShoppingCartIcon },
       { href: "/support", label: "پشتیبانی", icon: HeadsetIcon },
       { href: "#", label: "فروشگاه", icon: StorefrontIcon },
     ],
