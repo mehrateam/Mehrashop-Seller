@@ -3,13 +3,29 @@
 import { useEffect, useState, type FormEvent } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRightIcon, DownloadSimpleIcon } from "@phosphor-icons/react"
+import {
+  ArrowRightIcon,
+  BarcodeIcon,
+  CalendarBlankIcon,
+  ClockCountdownIcon,
+  DownloadSimpleIcon,
+  HashIcon,
+  MapPinIcon,
+  PackageIcon,
+  PhoneIcon,
+  SealCheckIcon,
+  TruckIcon,
+  UserIcon,
+  WalletIcon,
+} from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import {
+  ORDER_FLOW,
   REJECT_REASONS,
   STATUS_CLASS,
   downloadInvoice,
   fetchOrder,
+  flowIndex,
   mediaUrl,
   postOrder,
   rejectOrderItem,
@@ -27,8 +43,10 @@ export function OrderView({ id }: { id: string }) {
   const [note, setNote] = useState("")
   const [handover, setHandover] = useState("")
   const [tracking, setTracking] = useState("")
+  const stepIcons = [ClockCountdownIcon, PackageIcon, SealCheckIcon, TruckIcon]
   const loading = loadedId !== id
   const active = order?.items?.filter((item) => item.status !== "rejected") ?? []
+  const place = [order?.province, order?.city === order?.province ? "" : order?.city, order?.address].filter(Boolean).join("، ")
 
   useEffect(() => {
     let alive = true
@@ -90,7 +108,7 @@ export function OrderView({ id }: { id: string }) {
           </Link>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-lg font-bold tracking-tight">سفارش #{id}</h1>
-            {order ? (
+            {order && flowIndex(order.status) < 0 ? (
               <span className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${STATUS_CLASS[order.status] || STATUS_CLASS.cancelled}`}>
                 {order.status_label}
               </span>
@@ -125,18 +143,82 @@ export function OrderView({ id }: { id: string }) {
         </div>
       ) : (
         <>
-          <div className="grid gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:grid-cols-2 sm:p-5">
-            <p className="text-sm"><span className="text-muted-foreground">مشتری: </span>{order.customer_name}</p>
-            <p className="text-sm"><span className="text-muted-foreground">تلفن: </span>{order.phone || "—"}</p>
-            <p className="text-sm"><span className="text-muted-foreground">شهر: </span>{order.province}، {order.city}</p>
-            <p className="text-sm"><span className="text-muted-foreground">کد پستی: </span>{order.postal_code || "—"}</p>
-            <p className="text-sm sm:col-span-2"><span className="text-muted-foreground">آدرس: </span>{order.address || "—"}</p>
-            <p className="text-sm"><span className="text-muted-foreground">تاریخ: </span>{order.created_at}</p>
-            <p className="text-sm font-semibold">{toman(order.total)}</p>
-            {order.tracking_code ? (
-              <p className="text-sm sm:col-span-2"><span className="text-muted-foreground">کد رهگیری: </span>{order.tracking_code}</p>
+          {flowIndex(order.status) >= 0 ? (
+            <ol className="grid grid-cols-4 rounded-2xl border bg-card px-2 py-5 shadow-sm sm:px-6">
+              {ORDER_FLOW.map((step, index) => {
+                const current = flowIndex(order.status)
+                const done = current === ORDER_FLOW.length - 1 || index < current
+                const active = index === current && current < ORDER_FLOW.length - 1
+                const StepIcon = stepIcons[index]
+                return (
+                  <li key={step.id} className="relative flex flex-col items-center gap-2 text-center">
+                    {index < ORDER_FLOW.length - 1 ? (
+                      <span className={`absolute top-4 start-1/2 h-px w-full ${index < current ? "bg-primary" : "bg-border"}`} />
+                    ) : null}
+                    <span
+                      className={`relative z-10 flex size-8 items-center justify-center rounded-full ${
+                        done
+                          ? "bg-primary text-primary-foreground"
+                          : active
+                            ? "border-2 border-primary bg-card text-primary"
+                            : "border bg-card text-muted-foreground"
+                      }`}
+                    >
+                      <StepIcon className="size-4" weight={done ? "fill" : "regular"} />
+                    </span>
+                    <span className={`px-1 text-[11px] leading-4 sm:text-xs ${active || done ? "font-semibold" : "text-muted-foreground"}`}>
+                      {step.label}
+                    </span>
+                  </li>
+                )
+              })}
+            </ol>
+          ) : null}
+
+          <section className="rounded-2xl border bg-card p-5 shadow-sm">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <h2 className="flex items-center gap-2 text-base font-semibold leading-7">
+                  <UserIcon className="size-4 shrink-0 text-muted-foreground" />
+                  {order.customer_name}
+                </h2>
+                <p className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
+                  <PhoneIcon className="size-4 shrink-0" />
+                  <span dir="ltr">{order.phone || "—"}</span>
+                </p>
+              </div>
+              <div className="shrink-0 text-end">
+                <p className="flex items-center justify-end gap-1.5 text-base font-bold">
+                  <WalletIcon className="size-4 text-muted-foreground" />
+                  {toman(order.total)}
+                </p>
+                <p className="mt-1.5 flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
+                  <CalendarBlankIcon className="size-3.5" />
+                  {order.created_at}
+                </p>
+              </div>
+            </div>
+            <p className="mt-4 flex items-start gap-2 border-t pt-4 text-sm leading-7">
+              <MapPinIcon className="mt-1 size-4 shrink-0 text-muted-foreground" />
+              <span>{place || "—"}</span>
+            </p>
+            {order.postal_code || order.tracking_code ? (
+              <p className="mt-2 flex flex-wrap gap-x-5 gap-y-1.5 ps-6 text-xs text-muted-foreground">
+                {order.postal_code ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <HashIcon className="size-3.5" />
+                    <span className="font-medium text-foreground">{order.postal_code}</span>
+                  </span>
+                ) : null}
+                {order.tracking_code ? (
+                  <span className="inline-flex items-center gap-1.5 break-all">
+                    <BarcodeIcon className="size-3.5 shrink-0" />
+                    <span className="font-medium text-foreground">{order.tracking_code}</span>
+                  </span>
+                ) : null}
+              </p>
             ) : null}
-          </div>
+          </section>
 
           <div className="flex flex-col gap-2.5">
             {order.items?.map((item) => (

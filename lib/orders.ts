@@ -29,6 +29,18 @@ export const REJECT_REASONS = [
   "دلایل دیگر",
 ]
 
+export const ORDER_FLOW = [
+  { id: "paid", label: "در انتظار تایید" },
+  { id: "processing", label: "در حال آماده‌سازی" },
+  { id: "ready_for_shipping", label: "آماده ارسال" },
+  { id: "shipped", label: "ارسال شده" },
+] as const
+
+export function flowIndex(status: string) {
+  if (status === "shipped" || status === "delivered") return ORDER_FLOW.length - 1
+  return ORDER_FLOW.findIndex((step) => step.id === status)
+}
+
 export const STATUS_CLASS: Record<string, string> = {
   paid: "bg-amber-100 text-amber-950",
   processing: "bg-amber-100 text-amber-950",
