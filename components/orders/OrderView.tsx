@@ -19,6 +19,7 @@ import {
   WalletIcon,
 } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
+import { ShamsiDate } from "@/components/ui/shamsi-date"
 import {
   ORDER_FLOW,
   REJECT_REASONS,
@@ -95,6 +96,10 @@ export function OrderView({ id }: { id: string }) {
 
   async function onShip(e: FormEvent) {
     e.preventDefault()
+    if (!handover) {
+      setError("تاریخ تحویل را وارد کنید")
+      return
+    }
     await run(() => postOrder(id, "ship", { handover_time: handover, tracking_code: tracking.trim() }))
   }
 
@@ -288,10 +293,10 @@ export function OrderView({ id }: { id: string }) {
             <form onSubmit={onShip} className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
               <p className="text-sm font-semibold">ثبت ارسال</p>
               <div className="grid gap-3 sm:grid-cols-2">
-                <label className="flex flex-col gap-1.5 text-sm">
+                <div className="flex flex-col gap-1.5 text-sm">
                   <span className="text-muted-foreground">تاریخ تحویل به پست</span>
-                  <input type="datetime-local" required value={handover} onChange={(e) => setHandover(e.target.value)} className="h-10 rounded-xl border bg-transparent px-3" />
-                </label>
+                  <ShamsiDate value={handover} onChange={setHandover} />
+                </div>
                 <label className="flex flex-col gap-1.5 text-sm">
                   <span className="text-muted-foreground">کد رهگیری</span>
                   <input required value={tracking} onChange={(e) => setTracking(e.target.value)} className="h-10 rounded-xl border bg-transparent px-3 outline-none" />
