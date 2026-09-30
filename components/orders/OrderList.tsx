@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, type FormEvent } from "react"
+import { useEffect, useRef, useState, type FormEvent } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
@@ -30,29 +30,66 @@ export function OrderList() {
     key: string
     orders: SellerOrder[]
     counts: Record<string, number>
+    page: number
+    pages: number
   } | null>(null)
   const [error, setError] = useState("")
+  const [more, setMore] = useState(false)
+  const endRef = useRef<HTMLDivElement>(null)
   const ready = data?.key === queryKey
   const orders = ready ? data.orders : null
   const counts = ready ? data.counts : {}
+  const page = ready ? data.page : 0
+  const pages = ready ? data.pages : 0
 
   useEffect(() => {
     let alive = true
     fetchOrders(tab, sort, q)
       .then((res) => {
         if (!alive) return
-        setData({ key: queryKey, orders: res.orders, counts: res.counts })
+        setData({ key: queryKey, orders: res.orders, counts: res.counts, page: res.page, pages: res.pages })
         setError("")
       })
       .catch((err: unknown) => {
         if (!alive) return
-        setData({ key: queryKey, orders: [], counts: {} })
+        setData({ key: queryKey, orders: [], counts: {}, page: 1, pages: 1 })
         setError(err instanceof Error ? err.message : "خطا در دریافت سفارش‌ها")
       })
     return () => {
       alive = false
     }
   }, [tab, sort, q, queryKey])
+
+  useEffect(() => {
+    const node = endRef.current
+    if (!node || !ready || page >= pages) return
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return
+      observer.disconnect()
+      setMore(true)
+      fetchOrders(tab, sort, q, page + 1)
+        .then((res) => {
+          setData((prev) => {
+            if (!prev || prev.key !== queryKey) return prev
+            const seen = new Set(prev.orders.map((order) => order.id))
+            return {
+              ...prev,
+              orders: [...prev.orders, ...res.orders.filter((order) => !seen.has(order.id))],
+              counts: res.counts,
+              page: res.page,
+              pages: res.pages,
+            }
+          })
+          setError("")
+        })
+        .catch((err: unknown) => {
+          setError(err instanceof Error ? err.message : "خطا در دریافت سفارش‌ها")
+        })
+        .finally(() => setMore(false))
+    })
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [ready, page, pages, tab, sort, q, queryKey])
 
   function setQuery(key: string, value: string) {
     const next = new URLSearchParams(params)
@@ -172,6 +209,11 @@ export function OrderList() {
               </div>
             </Link>
           ))}
+          {page < pages ? (
+            <div ref={endRef} className="flex h-14 items-center justify-center text-sm text-muted-foreground">
+              {more ? "در حال بارگذاری..." : ""}
+            </div>
+          ) : null}
         </div>
       )}
     </div>

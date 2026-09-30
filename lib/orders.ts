@@ -107,15 +107,22 @@ async function read<T>(res: Response) {
   return body.data
 }
 
-export async function fetchOrders(status: string, sort: string, q: string) {
+export type OrderListPage = {
+  orders: SellerOrder[]
+  counts: Record<string, number>
+  page: number
+  pages: number
+  total: number
+}
+
+export async function fetchOrders(status: string, sort: string, q: string, page = 1) {
   const params = new URLSearchParams()
   if (status !== "all") params.set("status", status)
   if (sort !== "newest") params.set("sort", sort)
   if (q) params.set("q", q)
+  if (page > 1) params.set("page", String(page))
   const qs = params.toString()
-  return read<{ orders: SellerOrder[]; counts: Record<string, number> }>(
-    await apiFetch(`${ROOT}/${qs ? `?${qs}` : ""}`)
-  )
+  return read<OrderListPage>(await apiFetch(`${ROOT}/${qs ? `?${qs}` : ""}`))
 }
 
 export async function fetchOrder(id: string) {
