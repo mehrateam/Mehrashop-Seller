@@ -60,7 +60,7 @@ export function LoginForm() {
       <div className="mb-7">
         <h1 className="text-[22px] leading-tight font-bold tracking-tight">ورود به پنل فروشنده</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          شماره موبایل یا ایمیل و رمز عبور خود را وارد کنید.
+          نام کاربری، شماره موبایل یا ایمیل و رمز عبور خود را وارد کنید.
         </p>
       </div>
 
@@ -73,7 +73,7 @@ export function LoginForm() {
       <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
           <Label htmlFor="phoneEmail" className="text-[13px] font-semibold text-muted-foreground">
-            شماره موبایل یا ایمیل
+            نام کاربری، موبایل یا ایمیل
           </Label>
           <Input
             id="phoneEmail"
@@ -81,7 +81,7 @@ export function LoginForm() {
             type="text"
             value={phoneEmail}
             onChange={(e) => setPhoneEmail(e.target.value)}
-            placeholder="09xx… یا you@email.com"
+            placeholder="نام کاربری، 09xx… یا you@email.com"
             autoComplete="username"
             required
             className="h-12 rounded-xl border-border bg-muted px-3.5 text-sm font-medium placeholder:font-normal focus-visible:border-primary focus-visible:bg-card focus-visible:ring-primary/15"

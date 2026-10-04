@@ -197,7 +197,7 @@ export function OrderList() {
                   <CalendarBlankIcon className="size-3.5" />
                   {order.created_at}
                 </span>
-                <span className="font-semibold text-foreground">{toman(order.total)}</span>
+                <span className="text-sm font-bold text-primary">{toman(order.total)}</span>
               </div>
 
               <div className="flex items-center justify-between border-t pt-3 text-xs">
