@@ -45,31 +45,33 @@ export function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[120] grid place-items-center bg-[#171a14]/[0.42] p-5 backdrop-blur-[4px]"
+      className="fixed inset-0 z-[120] overflow-y-auto bg-[#171a14]/[0.42] backdrop-blur-[4px]"
       role="presentation"
       onClick={() => {
         if (closeOnBackdrop) onClose()
       }}
     >
-      <div
-        role="dialog"
-        aria-modal="true"
-        className={cn(
-          "relative w-full animate-[welcome-pop_220ms_cubic-bezier(0.16,1,0.3,1)] rounded-2xl border border-border bg-card p-6 shadow-[0_16px_50px_rgba(20,30,10,0.08)]",
-          sizes[size],
-          className
-        )}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          type="button"
-          aria-label="بستن"
-          onClick={onClose}
-          className="absolute top-2.5 start-3 flex size-8 items-center justify-center rounded-[10px] border border-border bg-card text-xl leading-none text-muted-foreground hover:bg-muted hover:text-foreground"
+      <div className="flex min-h-full justify-center p-4 sm:p-5">
+        <div
+          role="dialog"
+          aria-modal="true"
+          className={cn(
+            "relative my-auto w-full rounded-2xl border border-border bg-card p-6 shadow-[0_16px_50px_rgba(20,30,10,0.08)]",
+            sizes[size],
+            className
+          )}
+          onClick={(e) => e.stopPropagation()}
         >
-          ×
-        </button>
-        <div className="mt-1">{children}</div>
+          <button
+            type="button"
+            aria-label="بستن"
+            onClick={onClose}
+            className="absolute top-3 start-3 z-10 flex size-8 items-center justify-center rounded-[10px] border border-border bg-card text-xl leading-none text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            ×
+          </button>
+          <div className="mt-1">{children}</div>
+        </div>
       </div>
     </div>,
     document.body

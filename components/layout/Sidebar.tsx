@@ -28,14 +28,14 @@ const groups = [
       { href: "#", label: "محصولات", icon: PackageIcon },
       { href: "/orders", label: "سفارش‌ها", icon: ShoppingCartIcon },
       { href: "/support", label: "پشتیبانی", icon: HeadsetIcon },
-      { href: "#", label: "فروشگاه", icon: StorefrontIcon },
+      { href: "/store", label: "فروشگاه", icon: StorefrontIcon },
     ],
   },
   {
     label: "سیستم",
     items: [
       { href: "/uikit", label: "کیت رابط کاربری", icon: PaintBrushIcon },
-      { href: "#", label: "تنظیمات", icon: GearSixIcon },
+      { href: "/store/edit", label: "تنظیمات", icon: GearSixIcon },
     ],
   },
 ]
@@ -62,7 +62,9 @@ export default function Sidebar() {
               {group.items.map((item) => {
                 const active =
                   item.href !== "#" &&
-                  (item.href === "/" ? pathname === "/" : pathname.startsWith(item.href))
+                  (item.href === "/"
+                    ? pathname === "/"
+                    : pathname === item.href || (item.href !== "/store" && pathname.startsWith(`${item.href}/`)))
                 return (
                   <li key={item.label}>
                     <Link

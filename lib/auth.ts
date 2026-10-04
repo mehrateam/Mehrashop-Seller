@@ -82,6 +82,20 @@ export async function ensureSession() {
   return false
 }
 
+export async function changePassword(password: string, newPassword: string, confirmPassword: string) {
+  const res = await apiFetch("/dashboard/api/02/seller/password/", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      password,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    }),
+  })
+  const data = await json<null>(res)
+  if (!res.ok || !data?.is_success) throw new Error(data?.message ?? "تغییر رمز انجام نشد")
+}
+
 export async function logout() {
   try {
     await apiFetch("/dashboard/api/02/seller/logout/", {
