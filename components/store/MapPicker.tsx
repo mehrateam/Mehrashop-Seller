@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import Image from "next/image"
 import { MinusIcon, PlusIcon } from "@phosphor-icons/react"
 import { mapPoint, pointToLatLng } from "@/lib/store"
 
@@ -20,11 +21,13 @@ export function MapPicker({
   const moved = useRef(false)
   const [zoom, setZoom] = useState(lat || lng ? 15 : 11)
   const [center, setCenter] = useState(lat || lng ? { lat, lng } : tehran)
+  const [pinned, setPinned] = useState({ lat, lng })
   const [size, setSize] = useState({ w: 640, h: 288 })
 
-  useEffect(() => {
+  if (pinned.lat !== lat || pinned.lng !== lng) {
+    setPinned({ lat, lng })
     if (lat || lng) setCenter({ lat, lng })
-  }, [lat, lng])
+  }
 
   useEffect(() => {
     const el = box.current
@@ -94,11 +97,13 @@ export function MapPicker({
         }}
       >
         {tiles.map((tile) => (
-          <img
+          <Image
             key={tile.key}
             alt=""
             draggable={false}
             src={tile.src}
+            width={256}
+            height={256}
             className="pointer-events-none absolute size-64 max-w-none"
             style={{ left: tile.left, top: tile.top }}
           />

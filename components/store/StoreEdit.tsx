@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, type FormEvent } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import {
   CaretRightIcon,
@@ -195,7 +196,7 @@ export function StoreEdit() {
           <CardContent className="space-y-3">
             <div className="relative h-48 overflow-hidden rounded-2xl border bg-muted focus-within:ring-3 focus-within:ring-ring/50">
               {bannerSrc ? (
-                <img src={bannerSrc} alt="" className="size-full object-cover" />
+                <Image src={bannerSrc} alt="" width={1200} height={384} className="size-full object-cover" />
               ) : (
                 <div className="flex size-full flex-col items-center justify-center gap-2 bg-muted">
                   <ImageIcon className="size-6 text-muted-foreground" />
@@ -216,7 +217,7 @@ export function StoreEdit() {
               </span>
               <label className="absolute start-4 bottom-4 z-10 flex size-20 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-white shadow-sm">
                 {logoSrc ? (
-                  <img src={logoSrc} alt="" className="size-full object-contain" />
+                  <Image src={logoSrc} alt="" width={160} height={160} className="size-full object-contain" />
                 ) : (
                   <StorefrontIcon className="size-7 text-muted-foreground" />
                 )}

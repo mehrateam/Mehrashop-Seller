@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import {
   CaretLeftIcon,
@@ -70,7 +71,7 @@ export function StoreProfile() {
       <section className="relative">
         <div className="relative h-32 overflow-hidden rounded-2xl lg:h-56">
           {banner ? (
-            <img src={banner} alt="" className="size-full object-cover" />
+            <Image src={banner} alt="" width={1400} height={448} className="size-full object-cover" />
           ) : (
             <div className="size-full bg-primary" />
           )}
@@ -110,7 +111,7 @@ export function StoreProfile() {
 
         <div className="absolute top-3 right-3 flex size-16 items-center justify-center overflow-hidden rounded-xl border-2 border-white bg-white lg:top-auto lg:right-auto lg:-bottom-12 lg:left-8 lg:size-28 lg:rounded-[2rem] lg:border-4 lg:border-background">
           {logo ? (
-            <img src={logo} alt="" className="size-full object-contain" />
+            <Image src={logo} alt="" width={224} height={224} className="size-full object-contain" />
           ) : (
             <StorefrontIcon className="size-7 text-muted-foreground lg:size-10" />
           )}
@@ -174,7 +175,7 @@ export function StoreProfile() {
           <div>
             {photo ? (
               <div className="flex flex-col gap-3">
-                <img src={storeFile(photo.image)} alt="" className="h-64 w-full rounded-xl object-cover lg:h-80" />
+                <Image src={storeFile(photo.image)} alt="" width={960} height={640} className="h-64 w-full rounded-xl object-cover lg:h-80" />
                 {images.length > 1 ? (
                   <div className="flex items-center gap-2">
                     <button type="button" aria-label="تصویر قبلی" className="text-muted-foreground hover:text-primary" onClick={() => setSlide((index) => (index + images.length - 1) % images.length)}>
@@ -183,7 +184,7 @@ export function StoreProfile() {
                     <div className="flex gap-2 overflow-x-auto">
                       {images.map((image, index) => (
                         <button key={image.id} type="button" onClick={() => setSlide(index)} className={`size-16 shrink-0 overflow-hidden rounded-lg border-2 ${index === slide ? "border-primary" : "border-transparent opacity-70"}`}>
-                          <img src={storeFile(image.image)} alt="" className="size-full object-cover" />
+                          <Image src={storeFile(image.image)} alt="" width={128} height={128} className="size-full object-cover" />
                         </button>
                       ))}
                     </div>
@@ -241,7 +242,7 @@ export function StoreProfile() {
             {store.products.map((product) => (
               <article key={product.id} className="flex flex-col gap-3 rounded-xl border p-3">
                 {storeFile(product.image_cover) ? (
-                  <img src={storeFile(product.image_cover)} alt={product.fa_name} className="h-40 w-full rounded-lg object-cover" />
+                  <Image src={storeFile(product.image_cover)} alt={product.fa_name} width={640} height={320} className="h-40 w-full rounded-lg object-cover" />
                 ) : (
                   <div className="flex h-40 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                     <StorefrontIcon className="size-8" />
