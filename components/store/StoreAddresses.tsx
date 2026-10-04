@@ -223,8 +223,8 @@ export function StoreAddresses({
 
       <Modal open={draft !== null} onClose={() => setDraft(null)} size="lg">
         <form onSubmit={onSave} className="flex flex-col gap-4">
-          <div>
-            <h2 className="text-lg font-bold">{draft?.id ? "ویرایش آدرس" : "آدرس جدید"}</h2>
+          <div className="ps-11">
+            <h2 className="text-lg font-bold leading-8">{draft?.id ? "ویرایش آدرس" : "آدرس جدید"}</h2>
             <p className="mt-1 text-sm text-muted-foreground">نشانی شعبه و موقعیت آن روی نقشه</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">

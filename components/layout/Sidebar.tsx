@@ -2,43 +2,9 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  ChartBarIcon,
-  GearSixIcon,
-  HeadsetIcon,
-  PackageIcon,
-  PaintBrushIcon,
-  SquaresFourIcon,
-  StorefrontIcon,
-  ShoppingCartIcon,
-} from "@phosphor-icons/react"
+import { StorefrontIcon } from "@phosphor-icons/react"
+import { isPanelNavActive, panelNavGroups } from "@/lib/panel-nav"
 import { cn } from "@/lib/utils"
-
-const groups = [
-  {
-    label: "نمای کلی",
-    items: [
-      { href: "/", label: "داشبورد", icon: SquaresFourIcon },
-      { href: "#", label: "آمار و تحلیل", icon: ChartBarIcon },
-    ],
-  },
-  {
-    label: "مدیریت",
-    items: [
-      { href: "#", label: "محصولات", icon: PackageIcon },
-      { href: "/orders", label: "سفارش‌ها", icon: ShoppingCartIcon },
-      { href: "/support", label: "پشتیبانی", icon: HeadsetIcon },
-      { href: "/store", label: "فروشگاه", icon: StorefrontIcon },
-    ],
-  },
-  {
-    label: "سیستم",
-    items: [
-      { href: "/uikit", label: "کیت رابط کاربری", icon: PaintBrushIcon },
-      { href: "/store/edit", label: "تنظیمات", icon: GearSixIcon },
-    ],
-  },
-]
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -53,18 +19,14 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex flex-1 flex-col gap-6 overflow-y-auto">
-        {groups.map((group) => (
+        {panelNavGroups.map((group) => (
           <div key={group.label}>
             <p className="mb-2 px-3 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
               {group.label}
             </p>
             <ul className="space-y-1">
               {group.items.map((item) => {
-                const active =
-                  item.href !== "#" &&
-                  (item.href === "/"
-                    ? pathname === "/"
-                    : pathname === item.href || (item.href !== "/store" && pathname.startsWith(`${item.href}/`)))
+                const active = isPanelNavActive(pathname, item.href)
                 return (
                   <li key={item.label}>
                     <Link
