@@ -58,6 +58,16 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
   return refreshed.ok ? req(path, init) : res
 }
 
+export async function sellerExists(phone_email: string) {
+  const body = new FormData()
+  body.append("phone_email", phone_email)
+
+  const res = await req("/dashboard/api/02/seller/lookup/", { method: "POST", body })
+  const data = await json<{ exists: boolean }>(res)
+  if (!res.ok || !data?.is_success) throw new Error(data?.message ?? "خطا در بررسی حساب")
+  return Boolean(data.data?.exists)
+}
+
 export async function login(phone_email: string, password: string) {
   const body = new FormData()
   body.append("phone_email", phone_email)

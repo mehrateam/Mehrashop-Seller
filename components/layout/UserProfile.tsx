@@ -198,7 +198,7 @@ export function UserProfile() {
                     type="button"
                     onClick={async () => {
                       await logout()
-                      router.replace("/login")
+                      router.replace("/auth")
                     }}
                   >
                     <span className="user-menu-icon">

@@ -13,7 +13,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     ensureSession().then((authed) => {
       if (!alive) return
       if (authed) setOk(true)
-      else router.replace("/login")
+      else router.replace("/auth")
     })
     return () => {
       alive = false
