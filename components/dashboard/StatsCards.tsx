@@ -1,6 +1,3 @@
-"use client"
-
-import { useEffect, useState } from "react"
 import {
   ChatCircleIcon,
   PackageIcon,
@@ -9,30 +6,20 @@ import {
   type Icon,
 } from "@phosphor-icons/react"
 import { Card, CardContent } from "@/components/ui/card"
-import { fetchSellerStats, type SellerStats } from "@/lib/stats"
+import type { SellerStats } from "@/lib/stats"
 
-const cards: { key: keyof SellerStats; title: string; icon: Icon }[] = [
-  { key: "monthly_total", title: "مقدار فروش ماه (تومان)", icon: WalletIcon },
-  { key: "monthly_order_count", title: "تعداد فروش ماه", icon: ShoppingCartIcon },
-  { key: "comment_count", title: "تعداد دیدگاه ها", icon: ChatCircleIcon },
-  { key: "product_count", title: "تعداد محصولات", icon: PackageIcon },
+const cards: {
+  key: "monthly_total" | "monthly_order_count" | "product_count" | "comment_count"
+  title: string
+  icon: Icon
+}[] = [
+  { key: "monthly_total", title: "فروش ماه (تومان)", icon: WalletIcon },
+  { key: "monthly_order_count", title: "سفارش این ماه", icon: ShoppingCartIcon },
+  { key: "product_count", title: "محصولات فعال", icon: PackageIcon },
+  { key: "comment_count", title: "دیدگاه‌ها", icon: ChatCircleIcon },
 ]
 
-export default function StatsCards() {
-  const [stats, setStats] = useState<SellerStats | null>(null)
-
-  useEffect(() => {
-    let alive = true
-    fetchSellerStats()
-      .then((data) => {
-        if (alive) setStats(data)
-      })
-      .catch(() => {})
-    return () => {
-      alive = false
-    }
-  }, [])
-
+export default function StatsCards({ stats }: { stats: SellerStats | null }) {
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((item) => (
@@ -40,13 +27,13 @@ export default function StatsCards() {
           <CardContent className="pt-(--card-spacing)">
             <div className="mb-4 flex items-center justify-between gap-3">
               <span className="text-sm font-semibold text-muted-foreground">{item.title}</span>
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
-                <item.icon className="size-4.5" />
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <item.icon className="size-4.5" weight="duotone" />
               </div>
             </div>
-            <p className="text-2xl font-bold tracking-tight">
+            <p className="text-2xl font-bold tracking-tight tabular-nums">
               {stats
-                ? Number(stats[item.key]).toLocaleString("fa-IR", { maximumFractionDigits: 0 })
+                ? Number(stats[item.key] ?? 0).toLocaleString("fa-IR", { maximumFractionDigits: 0 })
                 : "—"}
             </p>
           </CardContent>

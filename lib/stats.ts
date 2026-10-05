@@ -1,10 +1,17 @@
 import { apiFetch } from "@/lib/auth"
 
+export type SellerDay = {
+  date: string
+  total: number
+  count: number
+}
+
 export type SellerStats = {
   monthly_total: number
   monthly_order_count: number
   comment_count: number
   product_count: number
+  days?: SellerDay[]
 }
 
 export async function fetchSellerStats() {

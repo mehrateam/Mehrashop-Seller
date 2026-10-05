@@ -9,31 +9,37 @@ import {
 } from "@/components/ui/chart"
 
 const chartData = [
-  { month: "فروردین", revenue: 4200 },
-  { month: "اردیبهشت", revenue: 5100 },
-  { month: "خرداد", revenue: 4800 },
-  { month: "تیر", revenue: 6200 },
-  { month: "مرداد", revenue: 5800 },
-  { month: "شهریور", revenue: 7100 },
+  { label: "فروردین", revenue: 4200 },
+  { label: "اردیبهشت", revenue: 5100 },
+  { label: "خرداد", revenue: 4800 },
+  { label: "تیر", revenue: 6200 },
+  { label: "مرداد", revenue: 5800 },
+  { label: "شهریور", revenue: 7100 },
 ]
 
 const chartConfig = {
   revenue: {
-    label: "درآمد",
+    label: "فروش",
     color: "var(--chart-1)",
   },
 } satisfies ChartConfig
 
-export default function RevenueChart() {
+export default function RevenueChart({
+  data,
+}: {
+  data?: { label: string; revenue: number }[]
+}) {
   return (
     <ChartContainer config={chartConfig} className="aspect-auto h-[240px] w-full">
-      <AreaChart accessibilityLayer data={chartData} margin={{ left: 8, right: 8 }}>
+      <AreaChart accessibilityLayer data={data ?? chartData} margin={{ left: 8, right: 8 }}>
         <CartesianGrid vertical={false} />
         <XAxis
-          dataKey="month"
+          dataKey="label"
           tickLine={false}
           axisLine={false}
-          tickMargin={10}
+          tickMargin={8}
+          interval={0}
+          tick={{ fontSize: 11 }}
         />
         <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
         <defs>
