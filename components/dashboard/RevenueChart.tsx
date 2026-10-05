@@ -1,6 +1,6 @@
 "use client"
 
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import {
   ChartContainer,
   ChartTooltip,
@@ -30,8 +30,12 @@ export default function RevenueChart({
   data?: { label: string; revenue: number }[]
 }) {
   return (
-    <ChartContainer config={chartConfig} className="aspect-auto h-[240px] w-full">
-      <AreaChart accessibilityLayer data={data ?? chartData} margin={{ left: 8, right: 8 }}>
+    <ChartContainer config={chartConfig} className="aspect-auto h-[220px] w-full">
+      <AreaChart
+        accessibilityLayer
+        data={data ?? chartData}
+        margin={{ top: 18, right: 4, left: 4, bottom: 0 }}
+      >
         <CartesianGrid vertical={false} />
         <XAxis
           dataKey="label"
@@ -39,21 +43,26 @@ export default function RevenueChart({
           axisLine={false}
           tickMargin={8}
           interval={0}
+          padding={{ left: 18, right: 18 }}
           tick={{ fontSize: 11 }}
         />
+        <YAxis hide domain={[0, (max: number) => Math.max(max * 1.22, 1)]} />
         <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
         <defs>
           <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="var(--color-revenue)" stopOpacity={0.35} />
-            <stop offset="95%" stopColor="var(--color-revenue)" stopOpacity={0.05} />
+            <stop offset="0%" stopColor="var(--color-revenue)" stopOpacity={0.28} />
+            <stop offset="100%" stopColor="var(--color-revenue)" stopOpacity={0.02} />
           </linearGradient>
         </defs>
         <Area
           dataKey="revenue"
-          type="natural"
+          type="monotone"
           fill="url(#fillRevenue)"
           stroke="var(--color-revenue)"
           strokeWidth={2}
+          baseValue={0}
+          dot={{ r: 3, fill: "var(--color-revenue)", stroke: "var(--card)", strokeWidth: 2 }}
+          activeDot={{ r: 4.5, stroke: "var(--card)", strokeWidth: 2 }}
         />
       </AreaChart>
     </ChartContainer>

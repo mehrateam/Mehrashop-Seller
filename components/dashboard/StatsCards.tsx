@@ -21,7 +21,7 @@ const cards: {
 
 export default function StatsCards({ stats }: { stats: SellerStats | null }) {
   return (
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((item) => (
         <Card key={item.key} className="rounded-2xl ring-foreground/5">
           <CardContent className="pt-(--card-spacing)">

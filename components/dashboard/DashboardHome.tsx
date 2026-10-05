@@ -7,9 +7,13 @@ import {
   CheckIcon,
   HeadsetIcon,
   PackageIcon,
+  PlusIcon,
   ShoppingCartIcon,
+  StorefrontIcon,
   type Icon,
 } from "@phosphor-icons/react"
+import { DashboardStock } from "@/components/dashboard/DashboardStock"
+import { DashboardTickets } from "@/components/dashboard/DashboardTickets"
 import RevenueChart from "@/components/dashboard/RevenueChart"
 import StatsCards from "@/components/dashboard/StatsCards"
 import { Badge } from "@/components/ui/badge"
@@ -107,33 +111,72 @@ export default function DashboardHome() {
     })
   }
 
+  const openTickets = Number(data?.ticketCounts.open ?? 0) + Number(data?.ticketCounts.in_review ?? 0)
+  const shortcuts: { href: string; label: string; hint: string; icon: Icon }[] = [
+    {
+      href: "/orders?tab=paid",
+      label: "تایید سفارش",
+      hint: counts.paid ? `${Number(counts.paid).toLocaleString("fa-IR")} سفارش منتظر` : "سفارش معلقی نیست",
+      icon: ShoppingCartIcon,
+    },
+    {
+      href: "/support",
+      label: "پشتیبانی",
+      hint: openTickets ? `${openTickets.toLocaleString("fa-IR")} تیکت باز` : "پیام بازی نیست",
+      icon: HeadsetIcon,
+    },
+    {
+      href: "/support/new",
+      label: "تیکت جدید",
+      hint: "سوال یا مشکل را بفرستید",
+      icon: PlusIcon,
+    },
+    {
+      href: "/store",
+      label: "فروشگاه",
+      hint: data?.shop || "پروفایل و محصولات",
+      icon: StorefrontIcon,
+    },
+  ]
+
   return (
-    <div className="flex flex-col gap-5">
-      <Card className="rounded-2xl bg-primary/10 ring-foreground/5">
-        <CardContent className="flex flex-col gap-4 pt-(--card-spacing) sm:flex-row sm:items-end sm:justify-between">
+    <div className="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-3">
+      <Card className="rounded-2xl bg-primary/10 ring-foreground/5 xl:col-span-3">
+        <CardContent className="flex flex-col gap-3 pt-(--card-spacing) sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
             <p className="text-xs font-semibold text-muted-foreground">{dateLabel}</p>
             <h1 className="text-2xl font-bold tracking-tight">سلام، {name}</h1>
             <p className="text-sm text-muted-foreground">{summary}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {data?.shop ? (
-              <span className="rounded-full border bg-card px-3 py-1 text-xs font-semibold">{data.shop}</span>
-            ) : null}
-            <Link href="/orders" className={buttonVariants({ size: "sm" })}>
-              سفارش‌ها
-            </Link>
-            <Link href="/store" className={buttonVariants({ variant: "outline", size: "sm" })}>
-              فروشگاه
-            </Link>
-          </div>
+          {data?.shop ? (
+            <span className="w-fit rounded-full border bg-card px-3 py-1 text-xs font-semibold">{data.shop}</span>
+          ) : null}
         </CardContent>
       </Card>
 
-      <StatsCards stats={stats} />
+      <div className="xl:col-span-3">
+        <StatsCards stats={stats} />
+      </div>
 
-      <section className="grid gap-5 xl:grid-cols-[2fr_1fr]">
-        <Card className="rounded-2xl ring-foreground/5">
+      <div className="grid grid-cols-2 gap-5 lg:grid-cols-4 xl:col-span-3">
+        {shortcuts.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="flex h-full items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/5 transition-colors hover:bg-muted/50"
+          >
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <item.icon className="size-5" weight="duotone" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold">{item.label}</p>
+              <p className="truncate text-xs text-muted-foreground">{item.hint}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      <Card className="h-full overflow-visible rounded-2xl ring-foreground/5 xl:col-span-2">
           <CardHeader>
             <CardTitle>فروش هفت روز اخیر</CardTitle>
             <CardDescription>
@@ -152,7 +195,7 @@ export default function DashboardHome() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl ring-foreground/5">
+        <Card className="h-full rounded-2xl ring-foreground/5">
           <CardHeader>
             <CardTitle>وضعیت سفارش‌ها</CardTitle>
             <CardDescription>
@@ -183,10 +226,8 @@ export default function DashboardHome() {
             )}
           </CardContent>
         </Card>
-      </section>
 
-      <section className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
-        <Card className="rounded-2xl ring-foreground/5">
+        <Card className="h-full rounded-2xl ring-foreground/5 xl:col-span-2">
           <CardHeader>
             <CardTitle>سفارش‌های اخیر</CardTitle>
             <CardAction>
@@ -242,7 +283,7 @@ export default function DashboardHome() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl ring-foreground/5">
+        <Card className="h-full rounded-2xl ring-foreground/5">
           <CardHeader>
             <CardTitle>کارهای امروز</CardTitle>
             <CardDescription>چیزهایی که بهتر است همین حالا ببینید</CardDescription>
@@ -279,7 +320,11 @@ export default function DashboardHome() {
             )}
           </CardContent>
         </Card>
-      </section>
+
+      <div className="xl:col-span-2">
+        <DashboardTickets ready={Boolean(data)} tickets={data?.tickets ?? []} counts={data?.ticketCounts ?? {}} />
+      </div>
+      <DashboardStock ready={Boolean(data)} products={data?.products ?? []} />
     </div>
   )
 }

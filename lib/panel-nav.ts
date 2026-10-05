@@ -21,7 +21,6 @@ export const panelNavGroups: { label: string; items: PanelNavItem[] }[] = [
     label: "نمای کلی",
     items: [
       { href: "/", label: "داشبورد", icon: SquaresFourIcon },
-      { href: "#", label: "آمار و تحلیل", icon: ChartBarIcon },
     ],
   },
   {
@@ -36,7 +35,6 @@ export const panelNavGroups: { label: string; items: PanelNavItem[] }[] = [
   {
     label: "سیستم",
     items: [
-      { href: "/uikit", label: "کیت رابط کاربری", icon: PaintBrushIcon },
       { href: "/store/edit", label: "تنظیمات", icon: GearSixIcon },
     ],
   },
