@@ -1,9 +1,7 @@
 import {
-  ChartBarIcon,
   GearSixIcon,
   HeadsetIcon,
   PackageIcon,
-  PaintBrushIcon,
   SquaresFourIcon,
   StorefrontIcon,
   ShoppingCartIcon,

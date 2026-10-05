@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 import { LoginForm } from "@/components/auth/LoginForm"
 
 export const metadata: Metadata = {
@@ -23,12 +24,12 @@ export default function AuthPage() {
             به همین دلیل، فروش کالاهایی که شامل گوشت، چرم طبیعی و خز باشد در مهراشاپ مجاز نیست.
           </p>
         </div>
-        <img src="/brand/login-art.svg" alt="" className="w-full max-w-xl" />
+        <Image src="/brand/login-art.svg" alt="" width={345} height={143} className="h-auto w-full max-w-xl" />
       </section>
 
       <section className="flex flex-1 items-center justify-center px-5 py-10 lg:flex-none lg:basis-[42%]">
         <div className="flex w-full max-w-[400px] flex-col items-center gap-8">
-          <img src="/brand/logo.svg" alt="مهراشاپ" className="h-16 w-auto" />
+          <Image src="/brand/logo.svg" alt="مهراشاپ" width={345} height={107} className="h-16 w-auto" />
           <LoginForm />
         </div>
       </section>

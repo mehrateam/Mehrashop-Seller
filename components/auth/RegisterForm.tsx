@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, type FormEvent } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -160,7 +161,7 @@ export function RegisterForm() {
     <div className="flex min-h-svh bg-[#f7f8f5]">
       <aside className="sticky top-0 hidden h-svh w-[42%] flex-col justify-between overflow-hidden bg-[#f3f6ec] px-12 py-12 lg:flex xl:w-[46%] xl:px-16">
         <div className="flex max-w-sm flex-col gap-8">
-          <img src="/brand/logo.svg" alt="مهراشاپ" className="h-12 w-fit" />
+          <Image src="/brand/logo.svg" alt="مهراشاپ" width={345} height={107} className="h-12 w-auto" />
           <div className="flex flex-col gap-3">
             <h1 className="text-[1.85rem] leading-snug font-bold tracking-tight">فروشگاه‌تان را باز کنید</h1>
             <p className="text-sm leading-7 text-muted-foreground">دو قدم کوتاه. عکس مدارک لازم نیست.</p>
@@ -180,13 +181,19 @@ export function RegisterForm() {
             </li>
           </ul>
         </div>
-        <img src="/brand/login-art.svg" alt="" className="mt-8 max-h-[46%] w-full max-w-sm object-contain" />
+        <Image
+          src="/brand/login-art.svg"
+          alt=""
+          width={345}
+          height={143}
+          className="mt-8 h-auto max-h-[46%] w-full max-w-sm object-contain"
+        />
       </aside>
 
       <section className="flex min-w-0 flex-1 justify-center px-5 py-6 sm:px-8 lg:items-center">
         <div className="flex w-full max-w-[440px] flex-col gap-5">
           <header className="flex items-center justify-between">
-            <img src="/brand/logo.svg" alt="مهراشاپ" className="h-11 w-auto lg:hidden" />
+            <Image src="/brand/logo.svg" alt="مهراشاپ" width={345} height={107} className="h-11 w-auto lg:hidden" />
             <Link
               href="/auth"
               className="ms-auto rounded-full bg-white px-4 py-2 text-sm font-medium text-[#3d4336] shadow-[0_0_0_1px_#e6eadf]"
