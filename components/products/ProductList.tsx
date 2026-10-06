@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, type FormEvent } from "react"
+import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { MagnifyingGlassIcon, PackageIcon, PlusIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
@@ -234,7 +235,7 @@ export function ProductList() {
               >
                 <div className="relative size-16 shrink-0">
                   {image ? (
-                    <img src={image} alt="" className="size-16 rounded-xl object-cover" />
+                    <Image src={image} alt="" width={64} height={64} className="size-16 rounded-xl object-cover" />
                   ) : (
                     <div className="flex size-16 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                       <PackageIcon className="size-5" />
