@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, type FormEvent } from "react"
+import { useEffect, useRef, useState, type FormEvent } from "react"
 import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,9 +21,10 @@ export function ForgotPassword({
   onReset: () => void
 }) {
   const preset = normalizePhone(account)
+  const slots = useRef<Array<HTMLInputElement | null>>([])
   const [step, setStep] = useState<"phone" | "code" | "password">("phone")
   const [phone, setPhone] = useState(/^09\d{9}$/.test(preset) ? preset : "")
-  const [code, setCode] = useState("")
+  const [code, setCode] = useState(["", "", "", "", "", ""])
   const [password, setPassword] = useState("")
   const [repeat, setRepeat] = useState("")
   const [show, setShow] = useState(false)
@@ -38,6 +39,10 @@ export function ForgotPassword({
     return () => window.clearInterval(timer)
   }, [wait])
 
+  useEffect(() => {
+    if (step === "code") slots.current[0]?.focus()
+  }, [step])
+
   async function sendCode(target: string) {
     const mobile = normalizePhone(target)
     if (!/^09\d{9}$/.test(mobile)) {
@@ -49,8 +54,9 @@ export function ForgotPassword({
     try {
       setWait(await requestPasswordOtp(mobile))
       setPhone(mobile)
-      setCode("")
+      setCode(["", "", "", "", "", ""])
       setStep("code")
+      slots.current[0]?.focus()
     } catch (err) {
       setError(err instanceof Error ? err.message : "خطایی رخ داد")
     } finally {
@@ -66,7 +72,7 @@ export function ForgotPassword({
     }
 
     if (step === "code") {
-      const pin = digits(code).replace(/\D/g, "")
+      const pin = code.join("")
       if (!/^\d{6}$/.test(pin)) {
         setError("کد ۶ رقمی پیامک را وارد کنید")
         return
@@ -110,6 +116,7 @@ export function ForgotPassword({
       : step === "code"
         ? `کد تأیید برای شماره ${phone} ارسال شد.`
         : "رمز عبور جدید انتخاب کنید."
+  const pin = code.join("")
 
   return (
     <form onSubmit={onSubmit} className="flex w-full flex-col gap-5">
@@ -150,23 +157,48 @@ export function ForgotPassword({
       ) : null}
 
       {step === "code" ? (
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="resetCode" className="sr-only">
-            کد تأیید
-          </Label>
-          <Input
-            id="resetCode"
-            name="code"
-            type="text"
-            inputMode="numeric"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="کد تأیید را وارد کنید"
-            autoComplete="one-time-code"
-            required
-            autoFocus
-            className={field}
-          />
+        <div className="flex flex-col gap-3">
+          <div className="flex justify-between gap-2" dir="ltr">
+            {code.map((digit, index) => (
+              <input
+                key={index}
+                ref={(node) => {
+                  slots.current[index] = node
+                }}
+                value={digit}
+                inputMode="numeric"
+                autoComplete={index === 0 ? "one-time-code" : "off"}
+                aria-label={`رقم ${index + 1}`}
+                className="h-14 w-full rounded-2xl bg-[#f7f8f5] text-center text-xl font-bold shadow-[0_0_0_1px_#e6eadf] outline-none focus:bg-white focus:shadow-[0_0_0_1.5px_#80ad01,0_0_0_4px_rgba(128,173,1,0.14)]"
+                onChange={(event) => {
+                  const nextDigit = digits(event.target.value).replace(/\D/g, "").slice(-1)
+                  const next = [...code]
+                  next[index] = nextDigit
+                  setCode(next)
+                  if (nextDigit && index < 5) slots.current[index + 1]?.focus()
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Backspace" && !code[index] && index > 0) {
+                    const next = [...code]
+                    next[index - 1] = ""
+                    setCode(next)
+                    slots.current[index - 1]?.focus()
+                  }
+                }}
+                onPaste={(event) => {
+                  const pasted = digits(event.clipboardData.getData("text")).replace(/\D/g, "").slice(0, 6)
+                  if (!pasted) return
+                  event.preventDefault()
+                  const next = ["", "", "", "", "", ""]
+                  pasted.split("").forEach((item, itemIndex) => {
+                    next[itemIndex] = item
+                  })
+                  setCode(next)
+                  slots.current[Math.min(pasted.length, 5)]?.focus()
+                }}
+              />
+            ))}
+          </div>
           <button
             type="button"
             disabled={wait > 0 || loading}
@@ -224,7 +256,11 @@ export function ForgotPassword({
         </div>
       ) : null}
 
-      <Button type="submit" disabled={loading} className="h-12 w-full rounded-xl text-sm font-semibold shadow-none">
+      <Button
+        type="submit"
+        disabled={loading || (step === "code" && pin.length < 6)}
+        className="h-12 w-full rounded-xl text-sm font-semibold shadow-none"
+      >
         {loading ? "لطفا صبر کنید..." : "تایید"}
       </Button>
 
