@@ -29,7 +29,8 @@ export function AccessScreen() {
   const tier = tierAt(user?.tier)
   const [editing, setEditing] = useState(false)
   const done = tier === "gold" && Boolean(user?.gold_done)
-  const showSilver = Boolean(user) && ((tier === "bronze" && user.bronze_done) || (tier === "silver" && editing))
+  const showSilver =
+    user != null && ((tier === "bronze" && user.bronze_done) || (tier === "silver" && editing))
 
   useEffect(() => {
     ensureSession()
