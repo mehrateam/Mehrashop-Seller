@@ -133,6 +133,44 @@ export async function ensureSession() {
   return false
 }
 
+export async function requestPasswordOtp(phone: string) {
+  const res = await req("/dashboard/api/02/seller/forgot-pass/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone }),
+  })
+  const data = await json<{ retry_after?: number }>(res)
+  if (!res.ok || !data?.is_success) throw new Error(data?.message ?? "ارسال پیامک انجام نشد")
+  return Number(data.data?.retry_after ?? 120)
+}
+
+export async function verifyPasswordOtp(phone: string, code: string) {
+  const res = await req("/dashboard/api/02/seller/forgot-pass/verify/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone, code }),
+  })
+  const data = await json<{ otp_token?: string }>(res)
+  if (!res.ok || !data?.is_success || !data.data?.otp_token) {
+    throw new Error(data?.message ?? "کد تایید درست نیست")
+  }
+  return data.data.otp_token
+}
+
+export async function resetForgottenPassword(otpToken: string, newPassword: string, confirmPassword: string) {
+  const res = await req("/dashboard/api/02/seller/forgot-pass/reset/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      otp_token: otpToken,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    }),
+  })
+  const data = await json<null>(res)
+  if (!res.ok || !data?.is_success) throw new Error(data?.message ?? "تغییر رمز انجام نشد")
+}
+
 export async function changePassword(password: string, newPassword: string, confirmPassword: string) {
   const res = await apiFetch("/dashboard/api/02/seller/password/", {
     method: "PUT",

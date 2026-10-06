@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ServerDown } from "@/components/auth/ServerDown"
+import { ForgotPassword } from "@/components/auth/ForgotPassword"
 import { ensureSession, login, sellerExists, ServerDownError } from "@/lib/auth"
 
 export function LoginForm() {
@@ -17,6 +18,8 @@ export function LoginForm() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
+  const [notice, setNotice] = useState("")
+  const [forgot, setForgot] = useState(false)
   const [loading, setLoading] = useState(false)
   const [down, setDown] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -86,6 +89,23 @@ export function LoginForm() {
   }
   if (!ready) return null
 
+  if (forgot) {
+    return (
+      <ForgotPassword
+        account={phoneEmail}
+        onBack={() => {
+          setForgot(false)
+          setError("")
+        }}
+        onReset={() => {
+          setPassword("")
+          setForgot(false)
+          setNotice("رمز عبور تغییر کرد. با رمز جدید وارد شوید.")
+        }}
+      />
+    )
+  }
+
   return (
     <form onSubmit={onSubmit} className="flex w-full flex-col gap-5">
       <div className="flex flex-col gap-2">
@@ -100,6 +120,10 @@ export function LoginForm() {
             : "این حساب وجود دارد. رمز عبور را وارد کنید."}
         </p>
       </div>
+
+      {notice ? (
+        <p className="rounded-xl border border-primary/20 bg-primary/10 px-3.5 py-2.5 text-sm text-primary">{notice}</p>
+      ) : null}
 
       {error ? (
         <p className="rounded-xl border border-destructive/20 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
@@ -165,6 +189,17 @@ export function LoginForm() {
               {showPassword ? <EyeSlashIcon className="size-5" /> : <EyeIcon className="size-5" />}
             </button>
           </div>
+          <button
+            type="button"
+            className="w-fit border-b border-dashed border-primary text-xs font-medium text-primary"
+            onClick={() => {
+              setNotice("")
+              setError("")
+              setForgot(true)
+            }}
+          >
+            فراموشی رمز عبور
+          </button>
         </div>
       ) : null}
 
