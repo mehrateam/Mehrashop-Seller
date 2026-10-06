@@ -25,12 +25,24 @@ function toUrl(path: string) {
   return path.startsWith("http") ? path : `${API}${path}`
 }
 
+export class ServerDownError extends Error {
+  constructor() {
+    super("سرور در دسترس نیست")
+    this.name = "ServerDownError"
+  }
+}
+
 async function req(path: string, init: RequestInit = {}) {
-  return fetch(toUrl(path), {
-    ...init,
-    credentials: "include",
-    headers: { "X-Requested-With": "XMLHttpRequest", ...init.headers },
-  })
+  try {
+    return await fetch(toUrl(path), {
+      ...init,
+      credentials: "include",
+      headers: { "X-Requested-With": "XMLHttpRequest", ...init.headers },
+    })
+  } catch (err) {
+    if (err instanceof TypeError) throw new ServerDownError()
+    throw err
+  }
 }
 
 async function json<T>(res: Response) {

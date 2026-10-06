@@ -33,7 +33,7 @@ export function AccessScreen() {
     user != null && ((tier === "bronze" && user.bronze_done) || (tier === "silver" && editing))
 
   useEffect(() => {
-    ensureSession()
+    ensureSession().catch(() => {})
   }, [])
 
   useEffect(() => {

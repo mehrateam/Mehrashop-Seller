@@ -6,7 +6,8 @@ import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ensureSession, login, sellerExists } from "@/lib/auth"
+import { ServerDown } from "@/components/auth/ServerDown"
+import { ensureSession, login, sellerExists, ServerDownError } from "@/lib/auth"
 
 export function LoginForm() {
   const router = useRouter()
@@ -17,18 +18,34 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [down, setDown] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [tryId, setTryId] = useState(0)
 
   useEffect(() => {
     let alive = true
-    ensureSession().then((authed) => {
-      if (!alive) return
-      if (authed) router.replace("/")
-      else setReady(true)
-    })
+    setBusy(true)
+    ensureSession()
+      .then((authed) => {
+        if (!alive) return
+        if (authed) router.replace("/")
+        else {
+          setDown(false)
+          setReady(true)
+        }
+      })
+      .catch((err) => {
+        if (!alive) return
+        if (err instanceof ServerDownError) setDown(true)
+        else setReady(true)
+      })
+      .finally(() => {
+        if (alive) setBusy(false)
+      })
     return () => {
       alive = false
     }
-  }, [router])
+  }, [router, tryId])
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -50,12 +67,14 @@ export function LoginForm() {
       sessionStorage.setItem("show_welcome_modal", "1")
       router.replace("/")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "خطایی رخ داد")
+      if (err instanceof ServerDownError) setDown(true)
+      else setError(err instanceof Error ? err.message : "خطایی رخ داد")
     } finally {
       setLoading(false)
     }
   }
 
+  if (down) return <ServerDown busy={busy} onRetry={() => setTryId((n) => n + 1)} />
   if (!ready) return null
 
   return (
