@@ -4,12 +4,16 @@ import { useEffect, useSyncExternalStore } from "react"
 import { createPortal } from "react-dom"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { StorefrontIcon, XIcon } from "@phosphor-icons/react"
+import { LockSimpleIcon, StorefrontIcon, XIcon } from "@phosphor-icons/react"
+import { TierMark } from "@/components/access/TierTrack"
 import { isPanelNavActive, panelNavGroups } from "@/lib/panel-nav"
+import { canSell } from "@/lib/tier"
+import { useSeller } from "@/lib/use-seller"
 import { cn } from "@/lib/utils"
 
 export function MobileNav({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname()
+  const selling = canSell(useSeller())
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -113,6 +117,7 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
                       >
                         <item.icon className="size-4.5" />
                         {item.label}
+                        {item.sell && !selling ? <LockSimpleIcon className="ms-auto size-3.5 opacity-60" /> : null}
                       </Link>
                     </li>
                   )
@@ -123,10 +128,7 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
         </div>
 
         <div className="mt-auto border-t pt-4">
-          <div className="flex items-center gap-2.5 rounded-lg bg-muted px-3 py-3 text-xs text-muted-foreground">
-            <span className="size-2 rounded-full bg-primary shadow-[0_0_0_3px] shadow-primary/20" />
-            سیستم فعال است
-          </div>
+          <TierMark />
         </div>
       </aside>
     </nav>,

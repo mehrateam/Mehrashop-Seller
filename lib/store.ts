@@ -50,6 +50,8 @@ export type SellerStore = {
   name_fa: string
   province: string | null
   city: string | null
+  address: string | null
+  postal_code: string | null
   business_license: string | null
   score: number | null
   instagram: string | null

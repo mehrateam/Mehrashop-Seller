@@ -1,13 +1,22 @@
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.mehrashop.com"
 const USER_KEY = "seller_user"
+const listeners = new Set<() => void>()
 
 export type SellerUser = {
+  id?: number
   first_name: string
   last_name: string
   phone_number: string
   email: string
   profile_image: string
   store_username: string
+  username?: string
+  is_legal?: boolean
+  is_confirmed?: boolean
+  tier?: "bronze" | "silver" | "gold"
+  bronze_done?: boolean
+  gold_done?: boolean
+  docs_sent?: boolean
 }
 
 type ApiOk<T> = { message: string; data: T; is_success: boolean }
@@ -28,16 +37,36 @@ async function json<T>(res: Response) {
   return (await res.json().catch(() => null)) as ApiOk<T> | null
 }
 
+let snapshotRaw: string | null = null
+let snapshotUser: SellerUser | null = null
+
 function cacheUser(user: SellerUser | null) {
-  if (user) sessionStorage.setItem(USER_KEY, JSON.stringify(user))
-  else sessionStorage.removeItem(USER_KEY)
+  if (user) {
+    snapshotRaw = JSON.stringify(user)
+    snapshotUser = user
+    sessionStorage.setItem(USER_KEY, snapshotRaw)
+  } else {
+    snapshotRaw = null
+    snapshotUser = null
+    sessionStorage.removeItem(USER_KEY)
+  }
+  listeners.forEach((listener) => listener())
+}
+
+export function subscribeUser(listener: () => void) {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
 }
 
 export function getUser(): SellerUser | null {
   try {
-    return JSON.parse(sessionStorage.getItem(USER_KEY) || "null")
+    const raw = sessionStorage.getItem(USER_KEY)
+    if (raw === snapshotRaw) return snapshotUser
+    snapshotRaw = raw
+    snapshotUser = raw ? (JSON.parse(raw) as SellerUser) : null
+    return snapshotUser
   } catch {
-    return null
+    return snapshotUser
   }
 }
 

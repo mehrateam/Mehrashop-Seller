@@ -12,6 +12,7 @@ export type PanelNavItem = {
   href: string
   label: string
   icon: Icon
+  sell?: boolean
 }
 
 export const panelNavGroups: { label: string; items: PanelNavItem[] }[] = [
@@ -24,7 +25,7 @@ export const panelNavGroups: { label: string; items: PanelNavItem[] }[] = [
   {
     label: "مدیریت",
     items: [
-      { href: "#", label: "محصولات", icon: PackageIcon },
+      { href: "/products", label: "محصولات", icon: PackageIcon, sell: true },
       { href: "/orders", label: "سفارش‌ها", icon: ShoppingCartIcon },
       { href: "/support", label: "پشتیبانی", icon: HeadsetIcon },
       { href: "/store", label: "فروشگاه", icon: StorefrontIcon },

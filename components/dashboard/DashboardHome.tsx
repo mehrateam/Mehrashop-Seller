@@ -12,6 +12,7 @@ import {
   StorefrontIcon,
   type Icon,
 } from "@phosphor-icons/react"
+import { AccessCard } from "@/components/access/AccessCard"
 import { DashboardStock } from "@/components/dashboard/DashboardStock"
 import { DashboardTickets } from "@/components/dashboard/DashboardTickets"
 import RevenueChart from "@/components/dashboard/RevenueChart"
@@ -153,6 +154,8 @@ export default function DashboardHome() {
           ) : null}
         </CardContent>
       </Card>
+
+      <AccessCard />
 
       <div className="xl:col-span-3">
         <StatsCards stats={stats} />

@@ -2,12 +2,16 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { StorefrontIcon } from "@phosphor-icons/react"
+import { LockSimpleIcon, StorefrontIcon } from "@phosphor-icons/react"
+import { TierMark } from "@/components/access/TierTrack"
 import { isPanelNavActive, panelNavGroups } from "@/lib/panel-nav"
+import { canSell } from "@/lib/tier"
+import { useSeller } from "@/lib/use-seller"
 import { cn } from "@/lib/utils"
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const selling = canSell(useSeller())
 
   return (
     <aside className="sticky top-5 hidden h-[calc(100svh-2.5rem)] w-64 shrink-0 flex-col rounded-2xl border bg-card p-5 shadow-sm lg:flex">
@@ -38,6 +42,7 @@ export default function Sidebar() {
                     >
                       <item.icon className="size-4.5" />
                       {item.label}
+                      {item.sell && !selling ? <LockSimpleIcon className="ms-auto size-3.5 opacity-60" /> : null}
                     </Link>
                   </li>
                 )
@@ -47,10 +52,7 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="mt-auto flex items-center gap-2.5 rounded-lg bg-muted px-3 py-3 text-xs text-muted-foreground">
-        <span className="size-2 rounded-full bg-primary shadow-[0_0_0_3px] shadow-primary/20" />
-        سیستم فعال است
-      </div>
+      <TierMark />
     </aside>
   )
 }
