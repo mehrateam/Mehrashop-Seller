@@ -14,7 +14,6 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let alive = true
-    setBusy(true)
     ensureSession()
       .then((authed) => {
         if (!alive) return
@@ -38,7 +37,17 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     }
   }, [router, tryId])
 
-  if (down) return <ServerDown busy={busy} onRetry={() => setTryId((n) => n + 1)} />
+  if (down) {
+    return (
+      <ServerDown
+        busy={busy}
+        onRetry={() => {
+          setBusy(true)
+          setTryId((n) => n + 1)
+        }}
+      />
+    )
+  }
   if (!ok) return null
   return children
 }

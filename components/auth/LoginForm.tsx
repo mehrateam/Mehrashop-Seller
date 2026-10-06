@@ -24,7 +24,6 @@ export function LoginForm() {
 
   useEffect(() => {
     let alive = true
-    setBusy(true)
     ensureSession()
       .then((authed) => {
         if (!alive) return
@@ -74,7 +73,17 @@ export function LoginForm() {
     }
   }
 
-  if (down) return <ServerDown busy={busy} onRetry={() => setTryId((n) => n + 1)} />
+  if (down) {
+    return (
+      <ServerDown
+        busy={busy}
+        onRetry={() => {
+          setBusy(true)
+          setTryId((n) => n + 1)
+        }}
+      />
+    )
+  }
   if (!ready) return null
 
   return (
