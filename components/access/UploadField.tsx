@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo } from "react"
+import Image from "next/image"
 import { ImageIcon } from "@phosphor-icons/react"
 
 function usePreview(file: File | null) {
@@ -33,9 +34,12 @@ export function UploadField({
   return (
     <label className={`flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border-2 border-dashed border-primary/50 bg-white px-3 py-4 text-center transition-colors hover:border-primary hover:bg-primary/5 ${square ? "mx-auto aspect-square w-48 shrink-0" : "min-h-36 w-full"}`}>
       {url ? (
-        <img
+        <Image
           src={url}
           alt=""
+          width={contain ? 640 : 80}
+          height={contain ? 360 : 80}
+          unoptimized
           className={
             contain
               ? "max-h-56 w-full rounded-xl object-contain"

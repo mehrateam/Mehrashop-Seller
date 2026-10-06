@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState, type FormEvent } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { UploadField } from "@/components/access/UploadField"
@@ -12,7 +11,6 @@ const field =
   "h-11 w-full rounded-xl border border-border bg-muted px-3.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
 
 export function GoldShop() {
-  const router = useRouter()
   const [provinces, setProvinces] = useState<ProvinceOption[]>([])
   const [logoUrl, setLogoUrl] = useState("")
   const [bannerUrl, setBannerUrl] = useState("")
@@ -93,7 +91,6 @@ export function GoldShop() {
       await ensureSession()
       sessionStorage.setItem("show_welcome_modal", "1")
       sessionStorage.setItem("welcome_modal_kind", "registered")
-      // router.replace("/")
     } catch (err) {
       setError(err instanceof Error ? err.message : "ذخیره فروشگاه انجام نشد")
       setLoading(false)

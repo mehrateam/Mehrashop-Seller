@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useState, useSyncExternalStore } from "react"
 import { usePathname } from "next/navigation"
 import { CheckIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
@@ -17,30 +17,33 @@ export function WelcomeModal({
   message?: string
 }) {
   const pathname = usePathname()
-  const [open, setOpen] = useState(
-    () => typeof window !== "undefined" && sessionStorage.getItem(FLAG) === "1"
+  const [revision, setRevision] = useState(0)
+  const subscribe = useCallback((onChange: () => void) => {
+    window.addEventListener("storage", onChange)
+    return () => window.removeEventListener("storage", onChange)
+  }, [])
+  const kind = useSyncExternalStore(
+    subscribe,
+    () => {
+      void pathname
+      void revision
+      if (sessionStorage.getItem(FLAG) !== "1") return ""
+      return sessionStorage.getItem(KIND) === "registered" ? "registered" : "login"
+    },
+    () => ""
   )
-  const [registered, setRegistered] = useState(
-    () => typeof window !== "undefined" && sessionStorage.getItem(KIND) === "registered"
-  )
-
-  useEffect(() => {
-    if (sessionStorage.getItem(FLAG) !== "1") return
-    setRegistered(sessionStorage.getItem(KIND) === "registered")
-    setOpen(true)
-  }, [pathname])
 
   function close() {
     sessionStorage.removeItem(FLAG)
     sessionStorage.removeItem(KIND)
-    setOpen(false)
+    setRevision((value) => value + 1)
   }
 
-  const heading = registered ? "ثبت‌نام کامل شد" : title
-  const text = registered ? "پروفایل، بنر و آدرس فروشگاه ثبت شد." : message
+  const heading = kind === "registered" ? "ثبت‌نام کامل شد" : title
+  const text = kind === "registered" ? "پروفایل، بنر و آدرس فروشگاه ثبت شد." : message
 
   return (
-    <Modal open={open} onClose={close} size="sm">
+    <Modal open={kind !== ""} onClose={close} size="sm">
       <div className="flex flex-col items-center gap-3 pt-2 text-center">
         <div className="grid size-11 place-items-center rounded-full bg-primary/12 text-xl font-bold text-[#537000]">
           <CheckIcon weight="bold" className="size-5" />

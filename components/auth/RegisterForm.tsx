@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { CheckCircleIcon, EyeIcon, EyeSlashIcon } from "@phosphor-icons/react"
 import { UploadField } from "@/components/access/UploadField"
 import { Button } from "@/components/ui/button"
@@ -19,9 +19,12 @@ const perks = ["کد تایید با همان پیامک مهراشاپ می‌�
 export function RegisterForm() {
   const router = useRouter()
   const slots = useRef<Array<HTMLInputElement | null>>([])
+  const account = useSearchParams().get("account") ?? ""
+  const found = classifyAccount(account)
   const [step, setStep] = useState<"form" | "code">("form")
-  const [phone, setPhone] = useState("")
-  const [username, setUsername] = useState("")
+  const [phone, setPhone] = useState(found.phone)
+  const [username, setUsername] = useState(found.username)
+  const [seenAccount, setSeenAccount] = useState(account)
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [logo, setLogo] = useState<File | null>(null)
@@ -31,12 +34,11 @@ export function RegisterForm() {
   const [storeId, setStoreId] = useState<number | null>(null)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    const found = classifyAccount(new URLSearchParams(window.location.search).get("account") ?? "")
+  if (seenAccount !== account) {
+    setSeenAccount(account)
     if (found.phone) setPhone(found.phone)
     if (found.username) setUsername(found.username)
-  }, [])
+  }
 
   useEffect(() => {
     if (wait <= 0) return
