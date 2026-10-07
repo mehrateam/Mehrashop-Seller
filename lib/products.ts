@@ -79,6 +79,33 @@ export async function fetchDraftLimit() {
   return body.data
 }
 
+export type CatalogProduct = {
+  id: number
+  title: string
+  en_name: string
+  image: string
+  categories: string[]
+}
+
+export async function searchCatalog(q: string) {
+  const params = new URLSearchParams({ q })
+  const res = await apiFetch(`${ROOT}/choose/?${params}`)
+  const body = (await res.json().catch(() => null)) as Ok<{ products: CatalogProduct[] }> | null
+  if (!res.ok || !body?.is_success) throw new Error(failText(body?.message))
+  return body.data.products
+}
+
+export async function chooseProduct(product: number) {
+  const res = await apiFetch(`${ROOT}/choose/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ product }),
+  })
+  const body = (await res.json().catch(() => null)) as Ok<{ offering: number; product: number }> | null
+  if (!res.ok || !body?.is_success) throw new Error(failText(body?.message))
+  return body.data
+}
+
 export async function fetchProducts(status: string, sort: string, q: string, page = 1) {
   const params = new URLSearchParams()
   if (status !== "all") params.set("status", status)
