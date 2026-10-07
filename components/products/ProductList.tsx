@@ -141,6 +141,9 @@ export function ProductList() {
           افزودن محصول جدید
         </Button>
       </div>
+      {params.get("notice") ? (
+        <p className="rounded-2xl bg-primary/10 px-4 py-3 text-sm text-primary">{params.get("notice")}</p>
+      ) : null}
       {blocked ? (
         <p className="rounded-2xl border border-[#DD794F]/30 bg-[#DD794F]/10 px-4 py-3 text-sm leading-7 text-[#9a4e2c]">
           {blocked}

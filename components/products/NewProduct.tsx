@@ -6,6 +6,9 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { MagnifyingGlassIcon, PackageIcon } from "@phosphor-icons/react"
 import { ProductStepOne } from "@/components/products/ProductStepOne"
 import { ProductStepTwo } from "@/components/products/ProductStepTwo"
+import { ProductStepThree } from "@/components/products/ProductStepThree"
+import { ProductStepFour } from "@/components/products/ProductStepFour"
+import { ProductStepFive } from "@/components/products/ProductStepFive"
 import { Button } from "@/components/ui/button"
 import {
   chooseProduct,
@@ -26,7 +29,7 @@ export function NewProduct() {
   const [error, setError] = useState("")
   const [picking, setPicking] = useState(0)
   const step = params.get("step")
-  const onForm = step === "1" || step === "2"
+  const onForm = step === "1" || step === "2" || step === "3" || step === "4" || step === "5"
 
   useEffect(() => {
     if (onForm) return
@@ -78,6 +81,9 @@ export function NewProduct() {
   const id = Number.isFinite(productId) ? productId : 0
   if (step === "1") return <ProductStepOne productId={id} />
   if (step === "2") return <ProductStepTwo productId={id} />
+  if (step === "3") return <ProductStepThree productId={id} />
+  if (step === "4") return <ProductStepFour productId={id} />
+  if (step === "5") return <ProductStepFive productId={id} />
 
   return (
     <div className="flex flex-col gap-5">

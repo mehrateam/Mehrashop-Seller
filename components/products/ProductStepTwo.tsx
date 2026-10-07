@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   ArticleIcon,
   CaretDownIcon,
@@ -37,10 +38,10 @@ const control =
   "h-12 w-full rounded-2xl border border-input bg-muted/40 px-4 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/10 disabled:cursor-default disabled:border-transparent disabled:bg-muted disabled:text-foreground disabled:opacity-100"
 
 export function ProductStepTwo({ productId }: { productId: number }) {
+  const router = useRouter()
   const [ready, setReady] = useState(false)
   const [loadError, setLoadError] = useState("")
   const [error, setError] = useState("")
-  const [saved, setSaved] = useState("")
   const [saving, setSaving] = useState(false)
   const [editable, setEditable] = useState(true)
   const [review, setReview] = useState(false)
@@ -146,19 +147,20 @@ export function ProductStepTwo({ productId }: { productId: number }) {
           className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]"
           onSubmit={(event) => {
             event.preventDefault()
-            if (!editable || saving) return
+            if (saving) return
+            if (!editable) {
+              router.push(`/products/new?step=3&product=${productId}`)
+              return
+            }
             if (brands.length && !brand) {
-              setSaved("")
               setError("برند را انتخاب کنید")
               return
             }
             if (!plainText(description) || (stock && !age.trim())) {
-              setSaved("")
               setError("لطفا همه فیلدهای الزامی را تکمیل کنید")
               return
             }
             if (filled < need) {
-              setSaved("")
               setError(attributes.length > FREE_AFTER ? "بیشتر از ۳ ویژگی را وارد کنید. بقیه اختیاری است." : "ویژگی‌های کالا را کامل کنید")
               return
             }
@@ -173,12 +175,10 @@ export function ProductStepTwo({ productId }: { productId: number }) {
               product_defects: stock ? defects : [],
               attribute_values: attributePayload(attributes, drafts),
             })
-              .then((step) => {
-                setDrafts(draftsFrom(step))
-                setSaved("این مرحله ذخیره شد.")
+              .then(() => {
+                router.push(`/products/new?step=3&product=${productId}`)
               })
               .catch((err: unknown) => {
-                setSaved("")
                 setError(err instanceof Error ? err.message : "ذخیره اطلاعات انجام نشد")
               })
               .finally(() => setSaving(false))
@@ -542,25 +542,20 @@ export function ProductStepTwo({ productId }: { productId: number }) {
               </div>
             </section>
             {error ? <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p> : null}
-            {saved ? <p className="rounded-2xl bg-primary/10 px-4 py-3 text-sm text-primary">{saved}</p> : null}
             <div className="hidden xl:block">
-              <Button type="submit" size="lg" className="h-12 w-full rounded-2xl text-base" disabled={!editable || saving}>
+              <Button type="submit" size="lg" className="h-12 w-full rounded-2xl text-base" disabled={saving}>
                 {saving ? "در حال ذخیره..." : "تایید و ادامه"}
               </Button>
               <p className="mt-2 text-center text-xs leading-6 text-muted-foreground">
-                {editable ? "با این دکمه، همین مرحله ذخیره می‌شود." : "این کالا از اینجا قابل ویرایش نیست."}
+                {editable ? "با تایید، مرحله مدیا باز می‌شود." : "مشخصات از اینجا عوض نمی‌شود."}
               </p>
             </div>
           </aside>
 
           <div className="fixed inset-x-3 bottom-3 z-30 xl:hidden">
-            {editable ? (
-              <Button type="submit" size="lg" className="h-12 w-full rounded-2xl text-base shadow-lg" disabled={saving}>
-                {saving ? "در حال ذخیره..." : "تایید و ادامه"}
-              </Button>
-            ) : (
-              <p className="rounded-2xl border bg-card/95 px-4 py-3 text-center text-sm shadow-lg backdrop-blur">این کالا از اینجا قابل ویرایش نیست</p>
-            )}
+            <Button type="submit" size="lg" className="h-12 w-full rounded-2xl text-base shadow-lg" disabled={saving}>
+              {saving ? "در حال ذخیره..." : "تایید و ادامه"}
+            </Button>
           </div>
         </form>
       )}
