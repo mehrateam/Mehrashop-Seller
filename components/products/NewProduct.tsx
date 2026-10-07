@@ -5,6 +5,7 @@ import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { MagnifyingGlassIcon, PackageIcon } from "@phosphor-icons/react"
 import { ProductStepOne } from "@/components/products/ProductStepOne"
+import { ProductStepTwo } from "@/components/products/ProductStepTwo"
 import { Button } from "@/components/ui/button"
 import {
   chooseProduct,
@@ -24,7 +25,8 @@ export function NewProduct() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [picking, setPicking] = useState(0)
-  const onForm = params.get("step") === "1"
+  const step = params.get("step")
+  const onForm = step === "1" || step === "2"
 
   useEffect(() => {
     if (onForm) return
@@ -73,7 +75,9 @@ export function NewProduct() {
     }
   }, [onForm, query])
 
-  if (onForm) return <ProductStepOne productId={Number.isFinite(productId) ? productId : 0} />
+  const id = Number.isFinite(productId) ? productId : 0
+  if (step === "1") return <ProductStepOne productId={id} />
+  if (step === "2") return <ProductStepTwo productId={id} />
 
   return (
     <div className="flex flex-col gap-5">

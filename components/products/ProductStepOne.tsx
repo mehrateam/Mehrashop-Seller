@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   CaretDownIcon,
   CaretLeftIcon,
-  CaretRightIcon,
+  CheckIcon,
   CheckCircleIcon,
   LockSimpleIcon,
   MagnifyingGlassIcon,
@@ -14,6 +14,7 @@ import {
   SealCheckIcon,
   TagIcon,
 } from "@phosphor-icons/react"
+import { ProductWizard } from "@/components/products/ProductWizard"
 import { Button } from "@/components/ui/button"
 import { fetchDraftLimit } from "@/lib/products"
 import { cn } from "@/lib/utils"
@@ -31,16 +32,15 @@ import {
   type CategoryNode,
 } from "@/lib/product-step"
 
-const STEPS = ["نوع و گروه کالا", "اطلاعات و ویژگی‌ها", "مدیا", "تنوع کالا", "شرایط کالا"]
 const LEVELS = ["دسته اصلی", "زیرگروه", "دسته سوم", "دسته نهایی"]
 
 export function ProductStepOne({ productId }: { productId: number }) {
+  const router = useRouter()
   const [blocked, setBlocked] = useState("")
   const [tree, setTree] = useState<CategoryNode[]>([])
   const [ready, setReady] = useState(false)
   const [loadError, setLoadError] = useState("")
   const [error, setError] = useState("")
-  const [saved, setSaved] = useState("")
   const [saving, setSaving] = useState(false)
   const [savedId, setSavedId] = useState(0)
   const [faName, setFaName] = useState("")
@@ -114,50 +114,7 @@ export function ProductStepOne({ productId }: { productId: number }) {
   }, [fieldsLocked, productType, stockAllowed])
 
   return (
-    <div className="flex w-full flex-col gap-4 pb-28 xl:pb-0">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold text-primary">مرحله ۱ از ۵</p>
-          <h1 className="mt-1 text-xl font-bold tracking-tight sm:text-2xl">نوع و گروه کالا</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{editing ? "ویرایش کالا" : "تعریف کالای جدید"}</p>
-        </div>
-        <Link href="/products/new" className="inline-flex h-10 shrink-0 items-center gap-1 rounded-xl border bg-card px-3 text-sm text-muted-foreground shadow-sm transition-colors hover:text-foreground">
-          <CaretRightIcon className="size-4" />
-          جستجو
-        </Link>
-      </div>
-
-      <div className="rounded-2xl border bg-card p-4 shadow-sm lg:hidden">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-semibold">نوع و گروه کالا</p>
-          <p className="text-xs font-semibold text-primary">۱ از ۵</p>
-        </div>
-        <div className="mt-3 flex gap-1.5">
-          {STEPS.map((label, index) => (
-            <span key={label} className={cn("h-1.5 flex-1 rounded-full", index === 0 ? "bg-primary" : "bg-muted")} />
-          ))}
-        </div>
-        <p className="mt-2 text-xs text-muted-foreground">مرحله بعد: اطلاعات و ویژگی‌ها</p>
-      </div>
-
-      <div className="relative hidden rounded-2xl border bg-card px-6 py-5 shadow-sm lg:block">
-        <div className="absolute inset-x-16 top-9 h-px bg-border" />
-        <ol className="relative grid grid-cols-5">
-          {STEPS.map((label, index) => (
-            <li key={label} className="flex flex-col items-center gap-2 text-center">
-              <span
-                className={cn(
-                  "flex size-8 items-center justify-center rounded-full text-xs font-bold",
-                  index === 0 ? "bg-primary text-primary-foreground ring-4 ring-primary/15" : "border bg-card text-muted-foreground"
-                )}
-              >
-                {(index + 1).toLocaleString("fa-IR")}
-              </span>
-              <span className={cn("text-sm", index === 0 ? "font-semibold" : "text-muted-foreground")}>{label}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
+    <ProductWizard step={1} title="نوع و گروه کالا" subtitle={editing ? "ویرایش کالا" : "تعریف کالای جدید"} backHref="/products/new" backLabel="جستجو" nextLabel="اطلاعات و ویژگی‌ها">
 
       {blocked ? (
         <p className="rounded-2xl border border-[#DD794F]/30 bg-[#DD794F]/10 px-4 py-3 text-sm leading-7 text-[#9a4e2c]">{blocked}</p>
@@ -178,9 +135,12 @@ export function ProductStepOne({ productId }: { productId: number }) {
           className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]"
           onSubmit={(event) => {
             event.preventDefault()
-            if (fieldsLocked || saving) return
+            if (saving) return
+            if (fieldsLocked) {
+              if (editing) router.push(`/products/new?step=2&product=${productId}`)
+              return
+            }
             if (!faName.trim() || !enName.trim() || !metaTitle.trim() || !metaDescription.trim() || !levels[3]) {
-              setSaved("")
               setError("لطفا همه فیلدهای الزامی را تکمیل کنید")
               return
             }
@@ -198,10 +158,9 @@ export function ProductStepOne({ productId }: { productId: number }) {
             })
               .then((step) => {
                 setSavedId(step.id)
-                setSaved("این مرحله ذخیره شد.")
+                router.push(`/products/new?step=2&product=${step.id}`)
               })
               .catch((err: unknown) => {
-                setSaved("")
                 setError(err instanceof Error ? err.message : "ذخیره کالا انجام نشد")
               })
               .finally(() => setSaving(false))
@@ -345,12 +304,12 @@ export function ProductStepOne({ productId }: { productId: number }) {
             ) : null}
           </section>
 
-          <section className="rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
-            <div className="mb-4">
+          <section className="flex flex-col gap-4 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+            <div>
               <h2 className="font-semibold">گروه‌های فرعی</h2>
               <p className="mt-1 text-xs text-muted-foreground">اگر کالا در دسته‌های دیگری هم دیده می‌شود</p>
             </div>
-            <span className="relative">
+            <div className="relative">
               <select
                 aria-label="گروه‌های فرعی"
                 className={cn(control, "appearance-none pe-9")}
@@ -369,7 +328,7 @@ export function ProductStepOne({ productId }: { productId: number }) {
                 ))}
               </select>
               <CaretDownIcon className="pointer-events-none absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            </span>
+            </div>
             {subs.length ? (
               <div className="flex flex-wrap gap-2">
                 {subs.map((id) => (
@@ -433,31 +392,41 @@ export function ProductStepOne({ productId }: { productId: number }) {
             {!fieldsLocked && Boolean(levels[3]) && !stockAllowed ? (
               <p className="mt-3 text-xs text-[#DD794F]">فروش استوک برای این دسته فعال نیست.</p>
             ) : null}
-            <label className={cn("mt-3 flex cursor-pointer items-center gap-3 rounded-2xl border p-3.5", original ? "border-primary bg-primary/10" : "bg-background", fieldsLocked && "cursor-default")}>
-              <SealCheckIcon className={cn("size-6 shrink-0", original ? "text-primary" : "text-muted-foreground")} weight="duotone" />
+            <button
+              type="button"
+              disabled={fieldsLocked}
+              aria-pressed={original}
+              className={cn(
+                "mt-3 flex w-full items-center gap-3 rounded-2xl border p-3.5 text-start transition-colors disabled:cursor-default",
+                original ? "border-primary bg-primary/10" : "bg-background hover:bg-muted"
+              )}
+              onClick={() => setOriginal((value) => !value)}
+            >
+              <SealCheckIcon className={cn("size-6 shrink-0", original ? "text-primary" : "text-muted-foreground")} weight={original ? "fill" : "duotone"} />
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold">نشان کالای اصل</span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">اگر غیراصل است، بردارید</span>
               </span>
-              <input type="checkbox" className="size-5 accent-primary" checked={original} disabled={fieldsLocked} onChange={(event) => setOriginal(event.target.checked)} />
-            </label>
+              <span aria-hidden className={cn("flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors", original ? "border-primary bg-primary text-primary-foreground" : "border-input bg-background")}>
+                <CheckIcon className={cn("size-3.5 transition-transform", original ? "scale-100" : "scale-0")} weight="bold" />
+              </span>
+            </button>
           </section>
 
           {error ? <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p> : null}
-          {saved ? <p className="rounded-2xl bg-primary/10 px-4 py-3 text-sm text-primary">{saved}</p> : null}
 
           <div className="hidden xl:block">
-            <Button type="submit" size="lg" className="h-12 w-full rounded-2xl text-base" disabled={fieldsLocked || saving}>
+            <Button type="submit" size="lg" className="h-12 w-full rounded-2xl text-base" disabled={saving || (fieldsLocked && !editing)}>
               {saving ? "در حال ذخیره..." : "تایید و ادامه"}
             </Button>
             <p className="mt-2 text-center text-xs leading-6 text-muted-foreground">
-              {fieldsLocked ? "مشخصات کاتالوگ از اینجا عوض نمی‌شود." : "با این دکمه، همین مرحله ذخیره می‌شود."}
+              {fieldsLocked ? "مشخصات کاتالوگ از اینجا عوض نمی‌شود." : "با تایید، مرحله اطلاعات و ویژگی‌ها باز می‌شود."}
             </p>
           </div>
           </aside>
 
           <div className="fixed inset-x-3 bottom-3 z-30 xl:hidden">
-            {fieldsLocked ? (
+            {fieldsLocked && !editing ? (
               <p className="rounded-2xl border bg-card/95 px-4 py-3 text-center text-sm shadow-lg backdrop-blur">مشخصات این کالا از کاتالوگ است</p>
             ) : (
               <Button type="submit" size="lg" className="h-12 w-full rounded-2xl text-base shadow-lg" disabled={saving}>
@@ -467,6 +436,6 @@ export function ProductStepOne({ productId }: { productId: number }) {
           </div>
         </form>
       )}
-    </div>
+    </ProductWizard>
   )
 }
