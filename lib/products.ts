@@ -38,8 +38,60 @@ export type SellerProduct = {
   status_label: string
   active: boolean
   admin_deactivated: boolean
+  needs_review: boolean
   product_type: string
   is_original: boolean
+}
+
+export type SaleState = "active" | "inactive" | "draft" | "waiting" | "blocked"
+
+export const SALE_LABEL: Record<SaleState, string> = {
+  active: "فعال",
+  inactive: "غیرفعال",
+  draft: "پیش‌نویس",
+  waiting: "در انتظار تعیین دسته‌بندی",
+  blocked: "غیرفعال توسط مدیریت",
+}
+
+export const SALE_CLASS: Record<SaleState, string> = {
+  active: "bg-primary/15 text-primary",
+  inactive: "bg-destructive/10 text-destructive",
+  draft: "bg-muted text-muted-foreground",
+  waiting: "bg-[#DD794F]/15 text-[#9a4e2c]",
+  blocked: "bg-destructive/10 text-destructive",
+}
+
+export function saleState(product: SellerProduct): SaleState {
+  if (product.admin_deactivated) return "blocked"
+  if (product.status === "awaiting_category") return "waiting"
+  if (!product.active) return "inactive"
+  if (product.status === "draft") return "draft"
+  return "active"
+}
+
+export function editLabel(product: SellerProduct) {
+  if (product.status === "awaiting_category") return "مشاهده وضعیت"
+  if (product.needs_review) return "بررسی اطلاعات"
+  return "ویرایش"
+}
+
+export function productLink(id: number) {
+  return `https://mehrashop.com/product/pId-${id}/`
+}
+
+export function editLink(id: number) {
+  return `/products/new?step=1&product=${id}`
+}
+
+export async function setProductActive(id: number, active: boolean) {
+  const res = await apiFetch(`${ROOT}/${id}/status/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: active ? "activate" : "deactivate" }),
+  })
+  const body = (await res.json().catch(() => null)) as Ok<{ active: boolean }> | null
+  if (!res.ok || !body?.is_success) throw new Error(failText(body?.message))
+  return body.data.active
 }
 
 type Ok<T> = { message?: unknown; data: T; is_success: boolean }

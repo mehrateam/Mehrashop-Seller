@@ -59,10 +59,7 @@ export function ProductStepFour({ productId }: { productId: number }) {
   }
 
   useEffect(() => {
-    if (!productId) {
-      setReady(true)
-      return
-    }
+    if (!productId) return
     let alive = true
     fetchStepFour(productId)
       .then((step) => {

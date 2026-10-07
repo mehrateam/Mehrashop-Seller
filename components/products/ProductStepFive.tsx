@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowUUpLeftIcon, CheckCircleIcon, MapPinIcon, TruckIcon } from "@phosphor-icons/react"
@@ -45,10 +46,7 @@ export function ProductStepFive({ productId }: { productId: number }) {
   }
 
   useEffect(() => {
-    if (!productId) {
-      setReady(true)
-      return
-    }
+    if (!productId) return
     let alive = true
     fetchStepFive(productId)
       .then((step) => {
@@ -263,7 +261,7 @@ export function ProductStepFive({ productId }: { productId: number }) {
                   const on = methodIds.includes(item.id)
                   return (
                     <button key={item.id} type="button" className={cn("inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm", on ? "border-primary bg-primary/10" : "bg-background")} onClick={() => toggle(methodIds, item.id, setMethodIds)}>
-                      {item.icon ? <img src={item.icon} alt="" className="size-5 object-contain" /> : null}
+                      {item.icon ? <Image src={item.icon} alt="" width={20} height={20} unoptimized className="size-5 object-contain" /> : null}
                       {item.name}
                     </button>
                   )

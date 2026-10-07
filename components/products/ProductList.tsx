@@ -3,19 +3,27 @@
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
-import { MagnifyingGlassIcon, PackageIcon, PlusIcon } from "@phosphor-icons/react"
+import { EyeIcon, MagnifyingGlassIcon, PackageIcon, PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
+import { Modal } from "@/components/ui/modal"
 import { toman } from "@/lib/orders"
 import {
+  SALE_CLASS,
+  SALE_LABEL,
   SORTS,
-  STATUS_CLASS,
   STATUS_TABS,
+  editLabel,
+  editLink,
   fetchDraftLimit,
   fetchProducts,
   productImage,
+  productLink,
   productPrice,
+  saleState,
+  setProductActive,
   type SellerProduct,
 } from "@/lib/products"
+import { cn } from "@/lib/utils"
 
 export function ProductList() {
   const router = useRouter()
@@ -40,9 +48,13 @@ export function ProductList() {
   const [error, setError] = useState("")
   const [blocked, setBlocked] = useState("")
   const [more, setMore] = useState(false)
+  const [menu, setMenu] = useState(0)
+  const [busy, setBusy] = useState(0)
   const endRef = useRef<HTMLDivElement>(null)
   const ready = data?.key === queryKey
   const products = ready ? data.products : null
+  const chosen = products?.find((item) => item.id === menu) ?? null
+  const chosenState = chosen ? saleState(chosen) : "draft"
   const counts = ready ? data.counts : {}
   const page = ready ? data.page : 0
   const pages = ready ? data.pages : 0
@@ -120,6 +132,21 @@ export function ProductList() {
   function onSearch(e: FormEvent) {
     e.preventDefault()
     setQuery("q", draft.trim())
+  }
+
+  function applyStatus(id: number, active: boolean) {
+    if (busy) return
+    setBusy(id)
+    setProductActive(id, active)
+      .then((next) => {
+        setData((prev) =>
+          prev ? { ...prev, products: prev.products.map((item) => (item.id === id ? { ...item, active: next } : item)) } : prev
+        )
+        setMenu(0)
+        setError("")
+      })
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : "تغییر وضعیت انجام نشد"))
+      .finally(() => setBusy(0))
   }
 
   return (
@@ -206,13 +233,14 @@ export function ProductList() {
         </p>
       ) : null}
 
-      <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-        <div className="hidden border-b bg-muted/50 px-4 py-2.5 text-xs font-medium text-muted-foreground md:grid md:grid-cols-[4rem_minmax(0,1fr)_9rem_5.5rem_7.5rem] md:gap-4">
+      <div className="rounded-2xl border bg-card shadow-sm">
+        <div className="hidden border-b bg-muted/50 px-4 py-2.5 text-xs font-medium text-muted-foreground md:grid md:grid-cols-[4rem_minmax(0,1fr)_8rem_5.5rem_8.5rem_8.5rem] md:gap-3">
           <span />
           <span>محصول</span>
           <span>قیمت</span>
           <span>موجودی</span>
           <span>وضعیت</span>
+          <span>عملیات</span>
         </div>
         {products === null ? (
           <div className="flex h-36 items-center justify-center text-sm text-muted-foreground">در حال بارگذاری...</div>
@@ -226,6 +254,8 @@ export function ProductList() {
           products.map((product) => {
             const image = productImage(product.image)
             const discount = Number(product.discount)
+            const state = saleState(product)
+            const locked = state === "waiting" || state === "blocked"
             const notes = [
               product.active ? "" : product.admin_deactivated ? "غیرفعال توسط مدیریت" : "غیرفعال",
               product.is_original === false ? "غیر اصل" : "",
@@ -234,7 +264,7 @@ export function ProductList() {
             return (
               <article
                 key={product.id}
-                className="flex items-center gap-3 border-b p-3 last:border-0 hover:bg-muted/40 md:grid md:grid-cols-[4rem_minmax(0,1fr)_9rem_5.5rem_7.5rem] md:gap-4 md:px-4"
+                className="flex items-center gap-3 border-b p-3 last:border-0 hover:bg-muted/40 md:grid md:grid-cols-[4rem_minmax(0,1fr)_8rem_5.5rem_8.5rem_8.5rem] md:gap-3 md:px-4"
               >
                 <div className="relative size-16 shrink-0">
                   {image ? (
@@ -268,9 +298,38 @@ export function ProductList() {
                     <p className={product.stock ? "text-sm font-medium" : "text-sm font-semibold text-destructive"}>
                       {product.stock ? `${product.stock.toLocaleString("fa-IR")} عدد` : "ناموجود"}
                     </p>
-                    <span className={`w-fit rounded-lg px-2.5 py-1 text-xs font-semibold ${STATUS_CLASS[product.status] || STATUS_CLASS.draft}`}>
-                      {product.status_label}
-                    </span>
+                    <button
+                      type="button"
+                      disabled={locked || busy === product.id}
+                      className={cn("w-fit rounded-lg px-2.5 py-1 text-xs font-semibold", SALE_CLASS[state], locked ? "cursor-default" : "cursor-pointer")}
+                      onClick={() => setMenu(product.id)}
+                    >
+                      {busy === product.id ? "..." : SALE_LABEL[state]}
+                    </button>
+                    <div className="flex flex-wrap gap-1.5">
+                      {product.status === "awaiting_category" ? null : (
+                        <a
+                          href={productLink(product.id)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex h-8 items-center gap-1 rounded-lg bg-primary px-2.5 text-xs font-semibold text-primary-foreground"
+                        >
+                          <EyeIcon className="size-3.5" weight="bold" />
+                          مشاهده
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        className={cn(
+                          "inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold",
+                          product.needs_review ? "bg-primary text-primary-foreground" : "border border-primary text-primary"
+                        )}
+                        onClick={() => router.push(editLink(product.id))}
+                      >
+                        <PencilSimpleIcon className="size-3.5" weight="bold" />
+                        {editLabel(product)}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </article>
@@ -283,6 +342,44 @@ export function ProductList() {
           </div>
         ) : null}
       </div>
+
+      <Modal open={chosen !== null} onClose={() => { if (!busy) setMenu(0) }} size="sm">
+        {chosen ? (
+          <div className="flex flex-col gap-4">
+            <div>
+              <h2 className="flex h-8 items-center ps-10 text-base font-semibold">وضعیت کالا</h2>
+              <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted-foreground">{chosen.title || "بدون نام"}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {(
+                [
+                  [true, "فعال"],
+                  [false, "غیرفعال"],
+                ] as const
+              ).map(([active, label]) => {
+                const current = active ? chosenState === "active" : chosenState === "inactive"
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    disabled={Boolean(busy) || current}
+                    className={cn(
+                      "h-11 rounded-xl text-sm font-semibold disabled:cursor-default",
+                      current && active && "bg-primary text-primary-foreground",
+                      current && !active && "bg-[#DD794F] text-white",
+                      !current && "border bg-background hover:bg-muted"
+                    )}
+                    onClick={() => applyStatus(chosen.id, active)}
+                  >
+                    {busy === chosen.id && !current ? "..." : label}
+                  </button>
+                )
+              })}
+            </div>
+            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          </div>
+        ) : null}
+      </Modal>
     </div>
   )
 }

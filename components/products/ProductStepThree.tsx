@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { CheckCircleIcon, ImageIcon, ImagesIcon, PlusIcon, VideoCameraIcon, XIcon } from "@phosphor-icons/react"
@@ -43,10 +44,7 @@ export function ProductStepThree({ productId }: { productId: number }) {
   ] as const
 
   useEffect(() => {
-    if (!productId) {
-      setReady(true)
-      return
-    }
+    if (!productId) return
     let alive = true
     fetchStepThree(productId)
       .then((step) => {
@@ -133,7 +131,7 @@ export function ProductStepThree({ productId }: { productId: number }) {
               </div>
               <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed bg-white p-4 sm:flex-row sm:items-stretch">
                 {cover ? (
-                  <img src={cover} alt="عکس اصلی" className="size-36 rounded-2xl border object-contain" />
+                  <Image src={cover} alt="عکس اصلی" width={144} height={144} unoptimized className="size-36 rounded-2xl border object-contain" />
                 ) : (
                   <span className="flex size-36 items-center justify-center rounded-2xl border border-dashed text-primary">
                     <PlusIcon className="size-8" />
@@ -178,7 +176,7 @@ export function ProductStepThree({ productId }: { productId: number }) {
               <div className="flex flex-wrap gap-3">
                 {images.map((item) => (
                   <span key={item.id} className="relative size-24 overflow-hidden rounded-2xl border">
-                    <img src={item.url} alt="" className="size-full object-cover" />
+                    <Image src={item.url} alt="" width={96} height={96} unoptimized className="size-full object-cover" />
                     {item.owned ? (
                       <button
                         type="button"
@@ -192,7 +190,7 @@ export function ProductStepThree({ productId }: { productId: number }) {
                 ))}
                 {newImages.map((item) => (
                   <span key={item.url} className="relative size-24 overflow-hidden rounded-2xl border">
-                    <img src={item.url} alt="" className="size-full object-cover" />
+                    <Image src={item.url} alt="" width={96} height={96} unoptimized className="size-full object-cover" />
                     <button
                       type="button"
                       className="absolute end-1.5 bottom-1.5 flex size-6 items-center justify-center rounded-lg bg-[#DD794F] text-white"

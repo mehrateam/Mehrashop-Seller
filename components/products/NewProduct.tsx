@@ -30,6 +30,8 @@ export function NewProduct() {
   const [picking, setPicking] = useState(0)
   const step = params.get("step")
   const onForm = step === "1" || step === "2" || step === "3" || step === "4" || step === "5"
+  const q = query.trim()
+  const found = q ? products : null
 
   useEffect(() => {
     if (onForm) return
@@ -47,13 +49,7 @@ export function NewProduct() {
   }, [onForm])
 
   useEffect(() => {
-    if (onForm) return
-    const q = query.trim()
-    if (!q) {
-      setProducts(null)
-      setLoading(false)
-      return
-    }
+    if (onForm || !q) return
     let alive = true
     const timer = setTimeout(() => {
       setLoading(true)
@@ -76,7 +72,7 @@ export function NewProduct() {
       alive = false
       clearTimeout(timer)
     }
-  }, [onForm, query])
+  }, [onForm, q])
 
   const id = Number.isFinite(productId) ? productId : 0
   if (step === "1") return <ProductStepOne productId={id} />
@@ -115,13 +111,13 @@ export function NewProduct() {
 
         <div className="flex flex-col gap-3">
           <p className="text-sm font-semibold text-[#E37444]">محصول های مشابه:</p>
-          {loading ? (
+          {q && loading ? (
             <p className="py-8 text-center text-sm text-muted-foreground">در حال جستجو...</p>
-          ) : products === null ? null : products.length === 0 ? (
+          ) : found === null ? null : found.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">محصول مشابهی پیدا نشد</p>
           ) : (
             <div className="flex gap-3 overflow-x-auto pb-1">
-              {products.map((product) => {
+              {found.map((product) => {
                 const image = productImage(product.image)
                 return (
                   <article

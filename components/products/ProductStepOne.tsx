@@ -108,10 +108,7 @@ export function ProductStepOne({ productId }: { productId: number }) {
     }
   }, [editing, productId])
 
-  useEffect(() => {
-    if (fieldsLocked || productType !== "stock" || stockAllowed) return
-    setProductType("new")
-  }, [fieldsLocked, productType, stockAllowed])
+  const type = !fieldsLocked && productType === "stock" && !stockAllowed ? "new" : productType
 
   return (
     <ProductWizard step={1} title="نوع و گروه کالا" subtitle={editing ? "ویرایش کالا" : "تعریف کالای جدید"} backHref="/products/new" backLabel="جستجو" nextLabel="اطلاعات و ویژگی‌ها">
@@ -153,7 +150,7 @@ export function ProductStepOne({ productId }: { productId: number }) {
               meta_description: metaDescription.trim(),
               main_category: levels[3],
               sub_category: subs,
-              product_type: productType,
+              product_type: type,
               is_original: original,
             })
               .then((step) => {
@@ -359,7 +356,7 @@ export function ProductStepOne({ productId }: { productId: number }) {
                   ["stock", "کالای استوک", "دسته‌دوم", RecycleIcon],
                 ] as const
               ).map(([id, title, hint, Icon]) => {
-                const active = productType === id
+                const active = type === id
                 const off = fieldsLocked || (id === "stock" && !stockAllowed)
                 return (
                   <button
