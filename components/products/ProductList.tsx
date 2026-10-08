@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { EyeIcon, MagnifyingGlassIcon, PackageIcon, PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react"
+import { ProductBulk } from "@/components/products/ProductBulk"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 import { toman } from "@/lib/orders"
@@ -50,7 +51,16 @@ export function ProductList() {
   const [more, setMore] = useState(false)
   const [menu, setMenu] = useState(0)
   const [busy, setBusy] = useState(0)
+  const [pickKey, setPickKey] = useState(queryKey)
+  const [picked, setPicked] = useState<number[]>([])
+  const [notice, setNotice] = useState("")
+  const [tick, setTick] = useState(0)
   const endRef = useRef<HTMLDivElement>(null)
+  if (pickKey !== queryKey) {
+    setPickKey(queryKey)
+    setPicked([])
+    setNotice("")
+  }
   const ready = data?.key === queryKey
   const products = ready ? data.products : null
   const chosen = products?.find((item) => item.id === menu) ?? null
@@ -89,7 +99,7 @@ export function ProductList() {
     return () => {
       alive = false
     }
-  }, [tab, sort, q, queryKey])
+  }, [tab, sort, q, queryKey, tick])
 
   useEffect(() => {
     const node = endRef.current
@@ -134,6 +144,14 @@ export function ProductList() {
     setQuery("q", draft.trim())
   }
 
+  const allPicked = products !== null && products.length > 0 && products.every((item) => picked.includes(item.id))
+
+  function toggleAll() {
+    if (!products?.length) return
+    const ids = products.map((item) => item.id)
+    setPicked(allPicked ? [] : ids)
+  }
+
   function applyStatus(id: number, active: boolean) {
     if (busy) return
     setBusy(id)
@@ -171,6 +189,7 @@ export function ProductList() {
       {params.get("notice") ? (
         <p className="rounded-2xl bg-primary/10 px-4 py-3 text-sm text-primary">{params.get("notice")}</p>
       ) : null}
+      {notice ? <p className="rounded-2xl bg-primary/10 px-4 py-3 text-sm text-primary">{notice}</p> : null}
       {blocked ? (
         <p className="rounded-2xl border border-[#DD794F]/30 bg-[#DD794F]/10 px-4 py-3 text-sm leading-7 text-[#9a4e2c]">
           {blocked}
@@ -233,8 +252,32 @@ export function ProductList() {
         </p>
       ) : null}
 
+      {products && picked.length ? (
+        <ProductBulk
+          products={products.filter((item) => picked.includes(item.id))}
+          onDone={(message) => {
+            setPicked([])
+            setNotice(message)
+            setTick((value) => value + 1)
+          }}
+        />
+      ) : null}
+
       <div className="rounded-2xl border bg-card shadow-sm">
-        <div className="hidden border-b bg-muted/50 px-4 py-2.5 text-xs font-medium text-muted-foreground md:grid md:grid-cols-[4rem_minmax(0,1fr)_8rem_5.5rem_8.5rem_8.5rem] md:gap-3">
+        {products && products.length ? (
+          <label className="flex items-center gap-2 border-b px-3 py-2.5 text-sm md:hidden">
+            <input type="checkbox" className="tick" checked={allPicked} onChange={toggleAll} />
+            انتخاب همه
+          </label>
+        ) : null}
+        <div className="hidden items-center border-b bg-muted/50 px-4 py-2.5 text-xs font-medium text-muted-foreground md:grid md:grid-cols-[1.5rem_4rem_minmax(0,1fr)_8rem_5.5rem_8.5rem_8.5rem] md:gap-3">
+          <input
+            type="checkbox"
+            className="tick"
+            checked={allPicked}
+            onChange={toggleAll}
+            aria-label="انتخاب همه"
+          />
           <span />
           <span>محصول</span>
           <span>قیمت</span>
@@ -264,8 +307,19 @@ export function ProductList() {
             return (
               <article
                 key={product.id}
-                className="flex items-center gap-3 border-b p-3 last:border-0 hover:bg-muted/40 md:grid md:grid-cols-[4rem_minmax(0,1fr)_8rem_5.5rem_8.5rem_8.5rem] md:gap-3 md:px-4"
+                className="flex items-center gap-3 border-b p-3 last:border-0 hover:bg-muted/40 md:grid md:grid-cols-[1.5rem_4rem_minmax(0,1fr)_8rem_5.5rem_8.5rem_8.5rem] md:gap-3 md:px-4"
               >
+                <input
+                  type="checkbox"
+                  className="tick"
+                  checked={picked.includes(product.id)}
+                  aria-label={`انتخاب ${product.title || "محصول"}`}
+                  onChange={() =>
+                    setPicked((prev) =>
+                      prev.includes(product.id) ? prev.filter((id) => id !== product.id) : [...prev, product.id]
+                    )
+                  }
+                />
                 <div className="relative size-16 shrink-0">
                   {image ? (
                     <Image src={image} alt="" width={64} height={64} className="size-16 rounded-xl object-cover" />

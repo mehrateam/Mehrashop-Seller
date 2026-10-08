@@ -83,6 +83,75 @@ export function editLink(id: number) {
   return `/products/new?step=1&product=${id}`
 }
 
+export type ProductSku = {
+  id: number
+  price: string
+  discount: string
+  count: number
+  variety: string
+}
+
+export type ProductSkuGroup = {
+  id: number
+  title: string
+  image: string
+  skus: ProductSku[]
+}
+
+export type SkuUpdate = {
+  id: number
+  price: number
+  discount_percentage: number
+  count: number
+}
+
+export function groupDigits(value: string) {
+  if (!value) return ""
+  const [whole, fraction] = value.split(".")
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+  return fraction === undefined ? grouped : `${grouped}.${fraction}`
+}
+
+export function nextSkuPrice(price: number, value: number, up: boolean, percent: boolean) {
+  if (percent) return up ? price + (price * value) / 100 : price - (price * value) / 100
+  if (up) return price + value
+  if (value < price) return price - value
+  return price
+}
+
+export async function bulkProductActive(ids: number[], active: boolean) {
+  const res = await apiFetch(`${ROOT}/status/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ids, action: active ? "activate" : "deactivate" }),
+  })
+  const body = (await res.json().catch(() => null)) as Ok<{ active: boolean; count: number }> | null
+  if (!res.ok || !body?.is_success) throw new Error(failText(body?.message))
+  return body.data
+}
+
+export async function fetchProductSkus(ids: number[]) {
+  const res = await apiFetch(`${ROOT}/skus/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ products: ids }),
+  })
+  const body = (await res.json().catch(() => null)) as Ok<{ products: ProductSkuGroup[] }> | null
+  if (!res.ok || !body?.is_success) throw new Error(failText(body?.message))
+  return body.data.products
+}
+
+export async function updateProductSkus(skus: SkuUpdate[]) {
+  const res = await apiFetch(`${ROOT}/skus/`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ skus }),
+  })
+  const body = (await res.json().catch(() => null)) as Ok<{ count: number }> | null
+  if (!res.ok || !body?.is_success) throw new Error(failText(body?.message))
+  return body.data
+}
+
 export async function setProductActive(id: number, active: boolean) {
   const res = await apiFetch(`${ROOT}/${id}/status/`, {
     method: "POST",
