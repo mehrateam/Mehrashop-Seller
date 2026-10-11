@@ -146,12 +146,14 @@ export type StepTwoAttribute = {
   data_type: string
   text_input_placeholder: string
   selective_attributes: StepTwoOption[]
-  multi_options: StepTwoOption[]
+  multi_groups: StepTwoOption[]
 }
 
 export type StepTwoNamed = { id: number; fa_name: string; description?: string }
 
-export type AttrDraft = { text: string; selective: number; multi: number[] }
+export type AttrDraft = { text: string; selective: number; multi: Record<number, string> }
+
+export type StepTwoMultiValue = { multi_text_attribute: number; text_value: string }
 
 export type StepTwoProduct = {
   id: number
@@ -175,7 +177,7 @@ export type StepTwoProduct = {
     attribute?: { id?: number }
     text_value?: string | null
     selective_value?: number | null
-    multi_text_value?: number[]
+    multi_text_value?: StepTwoMultiValue[]
   }>
 }
 
@@ -186,7 +188,12 @@ export type StepTwoInput = {
   important_tips: string[]
   product_age: string
   product_defects: string[]
-  attribute_values: Array<{ attribute: number; text_value?: string; selective_value?: number; multi_text_value?: number[] }>
+  attribute_values: Array<{
+    attribute: number
+    text_value?: string
+    selective_value?: number
+    multi_text_value?: StepTwoMultiValue[]
+  }>
 }
 
 export function plainText(value: string) {
@@ -196,15 +203,20 @@ export function plainText(value: string) {
 export function draftsFrom(step: StepTwoProduct) {
   const drafts: Record<number, AttrDraft> = {}
   step.available_attributes.forEach((attr) => {
-    drafts[attr.id] = { text: "", selective: 0, multi: [] }
+    drafts[attr.id] = { text: "", selective: 0, multi: {} }
   })
   step.attribute_values.forEach((value) => {
     const id = Number(value.attribute?.id || 0)
     if (!drafts[id]) return
+    const multi: Record<number, string> = {}
+    ;(value.multi_text_value || []).forEach((item) => {
+      const group = Number(item.multi_text_attribute || 0)
+      if (group) multi[group] = item.text_value || ""
+    })
     drafts[id] = {
       text: value.text_value || "",
       selective: Number(value.selective_value || 0),
-      multi: (value.multi_text_value || []).map(Number),
+      multi,
     }
   })
   return drafts
@@ -213,10 +225,15 @@ export function draftsFrom(step: StepTwoProduct) {
 export function attributePayload(attributes: StepTwoAttribute[], drafts: Record<number, AttrDraft>) {
   const rows: StepTwoInput["attribute_values"] = []
   attributes.forEach((attr) => {
-    const draft = drafts[attr.id] || { text: "", selective: 0, multi: [] }
+    const draft = drafts[attr.id] || { text: "", selective: 0, multi: {} }
     if (attr.data_type === "text" && draft.text.trim()) rows.push({ attribute: attr.id, text_value: draft.text.trim() })
     if (attr.data_type === "selective" && draft.selective) rows.push({ attribute: attr.id, selective_value: draft.selective })
-    if (attr.data_type === "multi_text" && draft.multi.length) rows.push({ attribute: attr.id, multi_text_value: draft.multi })
+    if (attr.data_type === "multi_text") {
+      const multi_text_value = Object.entries(draft.multi)
+        .map(([group, text]) => ({ multi_text_attribute: Number(group), text_value: text.trim() }))
+        .filter((item) => item.multi_text_attribute && item.text_value)
+      if (multi_text_value.length) rows.push({ attribute: attr.id, multi_text_value })
+    }
   })
   return rows
 }

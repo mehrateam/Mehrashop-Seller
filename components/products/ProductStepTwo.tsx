@@ -213,13 +213,17 @@ export function ProductStepTwo({ productId }: { productId: number }) {
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {attributes.map((attr) => {
-                    const draft = drafts[attr.id] || { text: "", selective: 0, multi: [] }
+                    const draft = drafts[attr.id] || { text: "", selective: 0, multi: {} }
+                    const groups = attr.multi_groups || []
                     return (
-                      <label key={attr.id} className="block">
-                        <span className="mb-1.5 flex items-center gap-2 text-sm font-medium">
+                      <div key={attr.id} className={cn("block", attr.data_type === "multi_text" && "sm:col-span-2")}>
+                        <p className="mb-1.5 flex items-center gap-2 text-sm font-medium">
                           {attr.fa_name}
+                          {attr.data_type === "multi_text" && groups.length ? (
+                            <span className="text-xs font-normal text-muted-foreground">{groups.length.toLocaleString("fa-IR")} گروه</span>
+                          ) : null}
                           {restOptional && !filledIds.has(attr.id) ? <span className="text-xs font-normal text-muted-foreground">اختیاری</span> : null}
-                        </span>
+                        </p>
                         {attr.data_type === "selective" ? (
                           <span className="relative block">
                             <select
@@ -240,30 +244,25 @@ export function ProductStepTwo({ productId }: { productId: number }) {
                             <CaretDownIcon className="pointer-events-none absolute end-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                           </span>
                         ) : attr.data_type === "multi_text" ? (
-                          <span className="flex flex-wrap gap-2">
-                            {attr.multi_options.map((option) => {
-                              const on = draft.multi.includes(option.id)
-                              return (
-                                <button
-                                  key={option.id}
-                                  type="button"
+                          <div className="grid gap-2">
+                            {groups.map((group) => (
+                              <label key={group.id} className="block">
+                                <span className="mb-1 block text-xs text-muted-foreground">{group.fa_title}</span>
+                                <input
+                                  className={control}
+                                  value={draft.multi[group.id] || ""}
                                   disabled={!editable}
-                                  className={cn("rounded-full border px-3 py-1.5 text-sm", on ? "border-primary bg-primary/10 text-foreground" : "bg-background text-muted-foreground")}
-                                  onClick={() =>
+                                  placeholder={group.fa_title}
+                                  onChange={(event) =>
                                     setDrafts((current) => ({
                                       ...current,
-                                      [attr.id]: {
-                                        ...draft,
-                                        multi: on ? draft.multi.filter((id) => id !== option.id) : [...draft.multi, option.id],
-                                      },
+                                      [attr.id]: { ...draft, multi: { ...draft.multi, [group.id]: event.target.value } },
                                     }))
                                   }
-                                >
-                                  {option.fa_title}
-                                </button>
-                              )
-                            })}
-                          </span>
+                                />
+                              </label>
+                            ))}
+                          </div>
                         ) : (
                           <input
                             className={control}
@@ -273,7 +272,7 @@ export function ProductStepTwo({ productId }: { productId: number }) {
                             onChange={(event) => setDrafts((current) => ({ ...current, [attr.id]: { ...draft, text: event.target.value } }))}
                           />
                         )}
-                      </label>
+                      </div>
                     )
                   })}
                 </div>
