@@ -69,9 +69,9 @@ export function StoreProfile() {
   return (
     <div className="flex flex-col gap-8 lg:gap-14">
       <section className="relative">
-        <div className="relative h-32 overflow-hidden rounded-2xl lg:h-56">
+        <div className="relative h-32 overflow-hidden rounded-2xl bg-muted lg:h-56">
           {banner ? (
-            <Image src={banner} alt="" width={1400} height={448} className="size-full object-cover" />
+            <Image src={banner} alt="" width={1440} height={350} className="size-full object-contain" />
           ) : (
             <div className="size-full bg-primary" />
           )}

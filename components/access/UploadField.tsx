@@ -44,8 +44,8 @@ export function UploadField({
             contain
               ? "max-h-56 w-full rounded-xl object-contain"
               : square
-                ? "size-20 rounded-xl object-cover"
-                : "h-20 w-full rounded-xl object-cover"
+                ? "size-20 rounded-xl object-contain"
+                : "h-20 w-full rounded-xl object-contain"
           }
         />
       ) : (

@@ -71,6 +71,48 @@ export function storeFile(file: string | null | undefined) {
   return file ? mediaUrl(file) : ""
 }
 
+const MEDIA_MAX = 500 * 1024
+const BANNER_W = 1440
+const BANNER_H = 350
+
+async function imageSize(file: File) {
+  if (typeof createImageBitmap === "function") {
+    const bmp = await createImageBitmap(file)
+    const size = { w: bmp.width, h: bmp.height }
+    bmp.close()
+    return size
+  }
+  const url = URL.createObjectURL(file)
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new window.Image()
+      el.onload = () => resolve(el)
+      el.onerror = () => reject(new Error("خواندن تصویر انجام نشد"))
+      el.src = url
+    })
+    return { w: img.naturalWidth, h: img.naturalHeight }
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
+/** null یعنی معتبر؛ در غیر این صورت عنوان و متن مودال */
+export async function checkStoreMedia(file: File, kind: "logo" | "banner") {
+  if (file.size > MEDIA_MAX) {
+    return { title: "حجم زیاد است", text: "حجم تصویر باید حداکثر ۵۰۰ کیلوبایت باشد." }
+  }
+  if (kind !== "banner") return null
+  try {
+    const { w, h } = await imageSize(file)
+    if (w !== BANNER_W || h !== BANNER_H) {
+      return { title: "اندازه نادرست است", text: "اندازه بنر باید دقیقاً ۱۴۴۰×۳۵۰ پیکسل باشد." }
+    }
+  } catch {
+    return { title: "تصویر نامعتبر است", text: "فایل تصویر خوانده نشد. دوباره انتخاب کنید." }
+  }
+  return null
+}
+
 export function storePrice(product: StoreProduct) {
   const amount = product.discounted_percentage ? product.discounted_price : product.price
   return toman(amount)

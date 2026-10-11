@@ -11,6 +11,7 @@ import {
   GlobeIcon,
   ImageIcon,
   InstagramLogoIcon,
+  LightbulbIcon,
   LockKeyIcon,
   StorefrontIcon,
   TelegramLogoIcon,
@@ -20,7 +21,7 @@ import {
 import { changePassword } from "@/lib/auth"
 import { DiscountPermit } from "@/components/store/DiscountPermit"
 import { StoreAddresses } from "@/components/store/StoreAddresses"
-import { fetchStore, storeFile, updateStore, type SellerStore } from "@/lib/store"
+import { checkStoreMedia, fetchStore, storeFile, updateStore, type SellerStore } from "@/lib/store"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -149,7 +150,14 @@ export function StoreEdit() {
     }
   }
 
-  function preview(kind: "logo" | "banner", file: File | null) {
+  async function preview(kind: "logo" | "banner", file: File | null) {
+    if (file) {
+      const problem = await checkStoreMedia(file, kind)
+      if (problem) {
+        setDialog({ ok: false, title: problem.title, text: problem.text })
+        return
+      }
+    }
     const next = file ? URL.createObjectURL(file) : null
     const prev = blobs.current[kind]
     if (prev) URL.revokeObjectURL(prev)
@@ -194,9 +202,16 @@ export function StoreEdit() {
             <CardDescription>بنر و لوگو، همان تصویری است که در صفحه فروشگاه دیده می‌شود.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="relative h-48 overflow-hidden rounded-2xl border bg-muted focus-within:ring-3 focus-within:ring-ring/50">
+            <div className="flex items-start gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sky-950">
+              <LightbulbIcon className="mt-0.5 size-5 shrink-0 text-sky-500" weight="fill" />
+              <div className="text-sm leading-7">
+                <p className="font-bold">نکته</p>
+                <p>اندازه بنر باید دقیقاً <span className="font-bold">۱۴۴۰×۳۵۰</span> پیکسل باشد و حجم آن حداکثر <span className="font-bold">۵۰۰ کیلوبایت</span>.</p>
+              </div>
+            </div>
+            <div className="relative aspect-[1440/350] overflow-hidden rounded-2xl border bg-muted focus-within:ring-3 focus-within:ring-ring/50">
               {bannerSrc ? (
-                <Image src={bannerSrc} alt="" width={1200} height={384} className="size-full object-cover" />
+                <Image src={bannerSrc} alt="" width={1440} height={350} className="size-full object-contain" />
               ) : (
                 <div className="flex size-full flex-col items-center justify-center gap-2 bg-muted">
                   <ImageIcon className="size-6 text-muted-foreground" />
@@ -209,7 +224,10 @@ export function StoreEdit() {
                   accept="image/jpeg,image/png,image/webp"
                   className="sr-only"
                   aria-label="بنر"
-                  onChange={(event) => preview("banner", event.target.files?.[0] ?? null)}
+                  onChange={(event) => {
+                    void preview("banner", event.target.files?.[0] ?? null)
+                    event.target.value = ""
+                  }}
                 />
               </label>
               <span className="pointer-events-none absolute end-4 bottom-3 rounded-lg bg-black/55 px-3 py-1.5 text-xs font-medium text-white">
@@ -226,11 +244,13 @@ export function StoreEdit() {
                   accept="image/jpeg,image/png,image/webp"
                   className="sr-only"
                   aria-label="لوگو"
-                  onChange={(event) => preview("logo", event.target.files?.[0] ?? null)}
+                  onChange={(event) => {
+                    void preview("logo", event.target.files?.[0] ?? null)
+                    event.target.value = ""
+                  }}
                 />
               </label>
             </div>
-            <p className="text-xs text-muted-foreground">روی بنر یا لوگوی مربعی بزنید. فرمت JPG، PNG یا WebP.</p>
           </CardContent>
         </Card>
 

@@ -1,11 +1,13 @@
 "use client"
 
 import { useEffect, useState, type FormEvent } from "react"
+import { CheckIcon, LightbulbIcon, WarningCircleIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Modal } from "@/components/ui/modal"
 import { UploadField } from "@/components/access/UploadField"
 import { ensureSession } from "@/lib/auth"
-import { fetchProvinces, fetchStore, storeFile, updateStore, type ProvinceOption } from "@/lib/store"
+import { checkStoreMedia, fetchProvinces, fetchStore, storeFile, updateStore, type ProvinceOption } from "@/lib/store"
 
 const field =
   "h-11 w-full rounded-xl border border-border bg-muted px-3.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -24,6 +26,7 @@ export function GoldShop() {
   const [about, setAbout] = useState("")
   const [postal, setPostal] = useState("")
   const [error, setError] = useState("")
+  const [dialog, setDialog] = useState<{ ok: boolean; title: string; text: string } | null>(null)
   const [loading, setLoading] = useState(false)
   const [ready, setReady] = useState(false)
 
@@ -57,6 +60,18 @@ export function GoldShop() {
   }, [ready])
 
   const cities = provinces.find((item) => String(item.id) === province)?.city ?? []
+
+  async function pickMedia(kind: "logo" | "banner", file: File | null) {
+    if (file) {
+      const problem = await checkStoreMedia(file, kind)
+      if (problem) {
+        setDialog({ ok: false, title: problem.title, text: problem.text })
+        return
+      }
+    }
+    if (kind === "logo") setLogo(file)
+    else setBanner(file)
+  }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
@@ -108,9 +123,16 @@ export function GoldShop() {
             </p>
           </div>
           {error ? <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
+          <div className="flex items-start gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sky-950">
+            <LightbulbIcon className="mt-0.5 size-5 shrink-0 text-sky-500" weight="fill" />
+            <div className="text-sm leading-7">
+              <p className="font-bold">نکته</p>
+              <p>اندازه بنر باید دقیقاً <span className="font-bold">۱۴۴۰×۳۵۰</span> پیکسل باشد و حجم آن حداکثر <span className="font-bold">۵۰۰ کیلوبایت</span>.</p>
+            </div>
+          </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <UploadField label="پروفایل" file={logo} current={logoUrl} onPick={setLogo} contain />
-            <UploadField label="بنر فروشگاه (اختیاری)" file={banner} current={bannerUrl} onPick={setBanner} contain />
+            <UploadField label="پروفایل" file={logo} current={logoUrl} onPick={(file) => void pickMedia("logo", file)} contain />
+            <UploadField label="بنر فروشگاه (اختیاری)" file={banner} current={bannerUrl} onPick={(file) => void pickMedia("banner", file)} contain />
           </div>
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-semibold text-muted-foreground">درباره ما</span>
@@ -160,6 +182,21 @@ export function GoldShop() {
           </Button>
         </CardContent>
       </Card>
+
+      <Modal open={dialog !== null} onClose={() => setDialog(null)} size="sm">
+        <div className="flex flex-col items-center gap-3 pt-2 text-center">
+          <div
+            className={`grid size-11 place-items-center rounded-full ${dialog?.ok ? "bg-primary/12 text-[#537000]" : "bg-destructive/10 text-destructive"}`}
+          >
+            {dialog?.ok ? <CheckIcon weight="bold" className="size-5" /> : <WarningCircleIcon weight="bold" className="size-5" />}
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight">{dialog?.title}</h2>
+          <p className="mb-1 text-sm text-muted-foreground">{dialog?.text}</p>
+          <Button type="button" onClick={() => setDialog(null)} className="mt-1 min-w-[140px] rounded-xl">
+            متوجه شدم
+          </Button>
+        </div>
+      </Modal>
     </form>
   )
 }
