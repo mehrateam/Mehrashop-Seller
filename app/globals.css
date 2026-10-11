@@ -689,3 +689,23 @@
   outline-offset: 2px;
 }
 
+.rich-text-editor .tox,
+.rich-text-editor .tox-tinymce {
+  font-family: PeydaWeb, sans-serif !important;
+}
+
+.rich-text-editor .tox-tinymce {
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+.rich-text-editor .tox-editor-header {
+  box-shadow: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 0.25rem 0.35rem !important;
+}
+
+.rich-text-editor .tox-statusbar {
+  border-top: 1px solid var(--border) !important;
+}
+

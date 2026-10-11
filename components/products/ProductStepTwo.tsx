@@ -19,6 +19,7 @@ import {
 } from "@phosphor-icons/react"
 import { ProductWizard } from "@/components/products/ProductWizard"
 import { Button } from "@/components/ui/button"
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import {
   attributePayload,
   canEditDetails,
@@ -320,19 +321,13 @@ export function ProductStepTwo({ productId }: { productId: number }) {
                   <p className="text-xs text-muted-foreground">آنچه خریدار باید قبل از سفارش بداند</p>
                 </div>
               </div>
-              <label className="block">
-                <span className="mb-1.5 flex gap-1 text-sm font-medium">
+              <div className="block">
+                <p className="mb-1.5 flex gap-1 text-sm font-medium">
                   <span>توضیح کالا</span>
                   <span className="text-[#DD794F]">*</span>
-                </span>
-                <textarea
-                  className={cn(control, "h-40 resize-none py-3 leading-7")}
-                  value={description}
-                  disabled={!editable}
-                  placeholder="جنس، کاربرد و نکته‌های مهم را بنویسید"
-                  onChange={(event) => setDescription(event.target.value)}
-                />
-              </label>
+                </p>
+                <RichTextEditor value={description} disabled={!editable} onChange={setDescription} />
+              </div>
             </section>
 
             {natures.length ? (
