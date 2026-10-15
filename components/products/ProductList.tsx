@@ -3,8 +3,15 @@
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
-import { EyeIcon, MagnifyingGlassIcon, PackageIcon, PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react"
+import {
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PackageIcon,
+  PencilSimpleIcon,
+  PlusIcon,
+} from "@phosphor-icons/react"
 import { ProductBulk } from "@/components/products/ProductBulk"
+import { ProductPriceEdit, type PriceEditMode } from "@/components/products/ProductPriceEdit"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 import { toman } from "@/lib/orders"
@@ -50,6 +57,8 @@ export function ProductList() {
   const [blocked, setBlocked] = useState("")
   const [more, setMore] = useState(false)
   const [menu, setMenu] = useState(0)
+  const [edit, setEdit] = useState(0)
+  const [editMode, setEditMode] = useState<PriceEditMode>("price")
   const [busy, setBusy] = useState(0)
   const [pickKey, setPickKey] = useState(queryKey)
   const [picked, setPicked] = useState<number[]>([])
@@ -64,6 +73,7 @@ export function ProductList() {
   const ready = data?.key === queryKey
   const products = ready ? data.products : null
   const chosen = products?.find((item) => item.id === menu) ?? null
+  const editing = products?.find((item) => item.id === edit) ?? null
   const chosenState = chosen ? saleState(chosen) : "draft"
   const counts = ready ? data.counts : {}
   const page = ready ? data.page : 0
@@ -343,15 +353,70 @@ export function ProductList() {
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 md:contents">
-                    <div>
-                      <p className="text-sm font-bold text-primary">{productPrice(product)}</p>
-                      {discount > 0 ? (
-                        <p className="text-xs text-muted-foreground line-through">{toman(product.price)}</p>
+                    <button
+                      type="button"
+                      disabled={locked}
+                      aria-label="ویرایش قیمت"
+                      className={cn(
+                        "group/price relative min-h-9 min-w-[5.5rem] text-start",
+                        locked ? "cursor-default" : "cursor-pointer"
+                      )}
+                      onClick={() => {
+                        if (locked) return
+                        setEditMode("price")
+                        setEdit(product.id)
+                      }}
+                    >
+                      <span
+                        className={cn(
+                          "block transition-opacity duration-150",
+                          !locked && "group-hover/price:opacity-0"
+                        )}
+                      >
+                        <p className="text-sm font-bold text-primary">{productPrice(product)}</p>
+                        {discount > 0 ? (
+                          <p className="text-xs text-muted-foreground line-through">{toman(product.price)}</p>
+                        ) : null}
+                      </span>
+                      {!locked ? (
+                        <span className="pointer-events-none absolute inset-y-0 start-0 flex items-center opacity-0 transition-opacity duration-150 group-hover/price:opacity-100 group-focus-visible/price:opacity-100">
+                          <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary">
+                            ویرایش قیمت
+                          </span>
+                        </span>
                       ) : null}
-                    </div>
-                    <p className={product.stock ? "text-sm font-medium" : "text-sm font-semibold text-destructive"}>
-                      {product.stock ? `${product.stock.toLocaleString("fa-IR")} عدد` : "ناموجود"}
-                    </p>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={locked}
+                      aria-label="ویرایش موجودی"
+                      className={cn(
+                        "group/stock relative min-h-9 min-w-[5rem] text-start",
+                        locked ? "cursor-default" : "cursor-pointer"
+                      )}
+                      onClick={() => {
+                        if (locked) return
+                        setEditMode("stock")
+                        setEdit(product.id)
+                      }}
+                    >
+                      <span
+                        className={cn(
+                          "block transition-opacity duration-150",
+                          product.stock ? "text-sm font-medium" : "text-sm font-semibold text-destructive",
+                          !locked && "group-hover/stock:opacity-0"
+                        )}
+                      >
+                        {product.stock ? `${product.stock.toLocaleString("fa-IR")} عدد` : "ناموجود"}
+                      </span>
+                      {!locked ? (
+                        <span className="pointer-events-none absolute inset-y-0 start-0 flex items-center opacity-0 transition-opacity duration-150 group-hover/stock:opacity-100 group-focus-visible/stock:opacity-100">
+                          <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary">
+                            ویرایش موجودی
+                          </span>
+                        </span>
+                      ) : null}
+                    </button>
                     <button
                       type="button"
                       disabled={locked || busy === product.id}
@@ -434,6 +499,18 @@ export function ProductList() {
           </div>
         ) : null}
       </Modal>
+
+      <ProductPriceEdit
+        productId={edit}
+        title={editing?.title || ""}
+        mode={editMode}
+        open={edit > 0}
+        onClose={() => setEdit(0)}
+        onDone={(message) => {
+          setNotice(message)
+          setTick((value) => value + 1)
+        }}
+      />
     </div>
   )
 }
