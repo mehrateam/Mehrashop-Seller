@@ -33,6 +33,8 @@ export function ProductPriceEdit({
   onClose: () => void
   onDone: (message: string) => void
 }) {
+  const loadKey = open && productId ? `${productId}:${mode}` : ""
+  const [dataKey, setDataKey] = useState("")
   const [rows, setRows] = useState<Draft[] | null>(null)
   const [tune, setTune] = useState(0)
   const [amount, setAmount] = useState("")
@@ -41,16 +43,20 @@ export function ProductPriceEdit({
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
   const pricing = mode === "price"
-
-  useEffect(() => {
-    if (!open || !productId) return
-    let alive = true
+  if (loadKey !== dataKey) {
+    setDataKey(loadKey)
     setRows(null)
     setTune(0)
     setAmount("")
     setUp(true)
     setPercent(false)
     setError("")
+    setBusy(false)
+  }
+
+  useEffect(() => {
+    if (!loadKey) return
+    let alive = true
     fetchProductSkus([productId])
       .then((groups) => {
         if (!alive) return
@@ -64,6 +70,7 @@ export function ProductPriceEdit({
             variety: sku.variety || "بدون تنوع",
           }))
         )
+        setError("")
       })
       .catch((err: unknown) => {
         if (!alive) return
@@ -73,7 +80,7 @@ export function ProductPriceEdit({
     return () => {
       alive = false
     }
-  }, [open, productId, mode])
+  }, [loadKey, productId])
 
   function patch(id: number, next: Partial<Draft>) {
     setRows((prev) => prev?.map((row) => (row.id === id ? { ...row, ...next } : row)) ?? prev)
