@@ -237,8 +237,9 @@ export function ProductStepFour({ productId }: { productId: number }) {
                 <div className="flex flex-col gap-3">
                   {skus.map((sku) => {
                     const title = sku.varieties.flatMap((item) => item.values.map((value) => value.value)).join(" / ") || "کالا"
+                    const amount = finalPrice(sku.price, sku.discount_percentage)
                     return (
-                      <div key={sku.id} className="rounded-2xl border p-3">
+                      <div key={sku.id} className="rounded-2xl border p-3 sm:p-4">
                         <p className="text-sm font-semibold">{title}</p>
                         <div className="mt-3 grid gap-2 sm:grid-cols-3">
                           {(
@@ -263,7 +264,12 @@ export function ProductStepFour({ productId }: { productId: number }) {
                             </label>
                           ))}
                         </div>
-                        <p className="mt-2 text-xs text-primary">قیمت نهایی {toman(finalPrice(sku.price, sku.discount_percentage))}</p>
+                        <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-primary/5 px-3.5 py-3">
+                          <span className="text-sm text-muted-foreground">قیمت نهایی</span>
+                          <span className={cn("text-xl font-bold leading-none tracking-tight tabular-nums", amount ? "text-primary" : "text-muted-foreground")}>
+                            {amount ? toman(amount) : "—"}
+                          </span>
+                        </div>
                       </div>
                     )
                   })}
