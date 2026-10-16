@@ -88,6 +88,7 @@ export function ProductStepFour({ productId }: { productId: number }) {
   return (
     <ProductWizard
       step={4}
+      productId={productId}
       title="تنوع کالا"
       subtitle={productId ? "تنوع، قیمت و موجودی" : "اول مرحله‌های قبل را ثبت کنید"}
       backHref={productId ? `/products/new?step=3&product=${productId}` : "/products/new?step=1"}

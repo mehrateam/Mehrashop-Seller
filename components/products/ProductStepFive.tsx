@@ -79,6 +79,7 @@ export function ProductStepFive({ productId }: { productId: number }) {
   return (
     <ProductWizard
       step={5}
+      productId={productId}
       title="شرایط کالا"
       subtitle={productId ? "ارسال، مرجوعی و ثبت نهایی" : "اول مرحله‌های قبل را ثبت کنید"}
       backHref={productId ? `/products/new?step=4&product=${productId}` : "/products/new?step=1"}

@@ -68,6 +68,7 @@ export function ProductStepThree({ productId }: { productId: number }) {
   return (
     <ProductWizard
       step={3}
+      productId={productId}
       title="مدیا"
       subtitle={productId ? "عکس اصلی، گالری و ویدیو" : "اول مرحله‌های قبل را ثبت کنید"}
       backHref={productId ? `/products/new?step=2&product=${productId}` : "/products/new?step=1"}

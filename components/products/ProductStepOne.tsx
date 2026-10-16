@@ -111,7 +111,7 @@ export function ProductStepOne({ productId }: { productId: number }) {
   const type = !fieldsLocked && productType === "stock" && !stockAllowed ? "new" : productType
 
   return (
-    <ProductWizard step={1} title="نوع و گروه کالا" subtitle={editing ? "ویرایش کالا" : "تعریف کالای جدید"} backHref="/products/new" backLabel="جستجو" nextLabel="اطلاعات و ویژگی‌ها">
+    <ProductWizard step={1} productId={productId} title="نوع و گروه کالا" subtitle={editing ? "ویرایش کالا" : "تعریف کالای جدید"} backHref="/products/new" backLabel="جستجو" nextLabel="اطلاعات و ویژگی‌ها">
 
       {blocked ? (
         <p className="rounded-2xl border border-[#DD794F]/30 bg-[#DD794F]/10 px-4 py-3 text-sm leading-7 text-[#9a4e2c]">{blocked}</p>

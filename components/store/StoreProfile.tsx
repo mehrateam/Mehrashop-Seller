@@ -67,98 +67,80 @@ export function StoreProfile() {
   const banner = storeFile(store.banner)
 
   return (
-    <div className="flex flex-col gap-8 lg:gap-14">
-      <section className="relative">
-        <div className="relative h-32 overflow-hidden rounded-2xl bg-muted lg:h-56">
+    <div className="flex flex-col gap-8">
+      <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="relative aspect-[1440/350] bg-muted">
           {banner ? (
-            <Image src={banner} alt="" width={1440} height={350} className="size-full object-contain" />
+            <Image
+              src={banner}
+              alt=""
+              fill
+              sizes="(min-width: 1280px) 1400px, 100vw"
+              className="object-cover"
+              style={{ objectFit: "cover" }}
+            />
           ) : (
-            <div className="size-full bg-primary" />
+            <div className="absolute inset-0 bg-gradient-to-l from-primary/20 via-[#eef6d8] to-muted" />
           )}
-          <div className="absolute inset-0 bg-black/50" />
+        </div>
 
-          <div className="relative hidden h-full items-start justify-between p-8 text-white lg:flex">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold">{store.name_fa || "فروشگاه"}</h1>
-                <Link
-                  href="/store/edit"
-                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-white hover:bg-primary/90"
-                >
-                  <PencilSimpleIcon className="size-4" />
-                  ویرایش اطلاعات
-                </Link>
-              </div>
-              <p className="text-sm text-white/80">شهر و استان فروشگاه</p>
-              <p className="text-sm font-medium text-white">{place || "مشخص نشده"}</p>
-              {store.score ? (
-                <p className="inline-flex items-center gap-1 text-sm">
-                  {store.score}
-                  <StarIcon className="size-3.5" weight="fill" />
-                </p>
-              ) : null}
-            </div>
-            <div className="flex flex-col items-end gap-1.5 text-sm">
-              {socials.map(({ label, Icon }) => (
-                <span key={label} className="inline-flex items-center gap-1.5">
-                  {label}
-                  <Icon className="size-4" />
-                </span>
-              ))}
-            </div>
+        <div className="relative px-4 pt-3 pb-5 sm:px-6 sm:pt-4 sm:pb-6">
+          <div className="absolute -top-8 start-4 z-10 flex size-16 items-center justify-center overflow-hidden rounded-2xl border-4 border-card bg-white shadow-md sm:-top-12 sm:start-6 sm:size-24">
+            {logo ? (
+              <Image src={logo} alt="" width={192} height={192} className="size-full object-contain" style={{ objectFit: "contain" }} />
+            ) : (
+              <StorefrontIcon className="size-7 text-muted-foreground sm:size-8" />
+            )}
           </div>
-        </div>
 
-        <div className="absolute top-3 right-3 flex size-16 items-center justify-center overflow-hidden rounded-xl border-2 border-white bg-white lg:top-auto lg:right-auto lg:-bottom-12 lg:left-8 lg:size-28 lg:rounded-[2rem] lg:border-4 lg:border-background">
-          {logo ? (
-            <Image src={logo} alt="" width={224} height={224} className="size-full object-contain" />
-          ) : (
-            <StorefrontIcon className="size-7 text-muted-foreground lg:size-10" />
-          )}
-        </div>
-
-        <div className="mt-4 flex flex-col gap-3 lg:hidden">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <h1 className="text-[15px] font-bold">{store.name_fa || "فروشگاه"}</h1>
+          <div className="flex flex-col gap-3 ps-20 sm:flex-row sm:items-center sm:justify-between sm:ps-28">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-lg font-bold sm:text-xl">{store.name_fa || "فروشگاه"}</h1>
                 {store.score ? (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-sm">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-sm font-medium text-primary">
+                    <StarIcon className="size-3.5" weight="fill" />
                     {store.score}
-                    <StarIcon className="size-3.5 text-primary" weight="fill" />
                   </span>
                 ) : null}
               </div>
-              {place ? <p className="text-sm text-muted-foreground">{place}</p> : null}
-              {store.business_license ? (
-                <p className="inline-flex items-center gap-1 text-sm text-primary">
-                  <SealCheckIcon className="size-4" />
-                  دارای پروانه کسب
-                </p>
-              ) : null}
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                <span className="inline-flex items-center gap-1 text-muted-foreground">
+                  <MapPinIcon className="size-4 shrink-0" />
+                  {place || "شهر و استان مشخص نشده"}
+                </span>
+                {store.business_license ? (
+                  <span className="inline-flex items-center gap-1 text-primary">
+                    <SealCheckIcon className="size-4" weight="fill" />
+                    دارای پروانه کسب
+                  </span>
+                ) : null}
+              </div>
             </div>
-            <div className="flex flex-col items-end gap-1 text-xs text-muted-foreground">
+
+            <Link
+              href="/store/edit"
+              className="inline-flex h-9 w-fit shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-white hover:bg-primary/90"
+            >
+              <PencilSimpleIcon className="size-4" />
+              ویرایش اطلاعات
+            </Link>
+          </div>
+
+          {socials.length ? (
+            <div className="mt-4 flex flex-wrap gap-2 border-t pt-4">
               {socials.map(({ label, Icon }) => (
-                <span key={label} className="inline-flex items-center gap-1.5">
-                  {label}
-                  <Icon className="size-4" />
+                <span key={label} className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs text-foreground/80">
+                  <Icon className="size-3.5 shrink-0 text-primary" />
+                  <span className="truncate" dir="ltr">{label}</span>
                 </span>
               ))}
             </div>
-          </div>
-          <div className="flex justify-end">
-            <Link
-              href="/store/edit"
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-primary px-3 text-sm font-medium text-primary"
-            >
-              ویرایش اطلاعات
-              <PencilSimpleIcon className="size-4" />
-            </Link>
-          </div>
+          ) : null}
         </div>
       </section>
 
-      <section className="lg:pt-4">
+      <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-base font-bold">درباره فروشگاه</h2>
           <Link href="/store/edit" className="inline-flex items-center gap-1 text-sm font-medium text-primary lg:hidden">
@@ -175,7 +157,16 @@ export function StoreProfile() {
           <div>
             {photo ? (
               <div className="flex flex-col gap-3">
-                <Image src={storeFile(photo.image)} alt="" width={960} height={640} className="h-64 w-full rounded-xl object-cover lg:h-80" />
+                <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-muted">
+                  <Image
+                    src={storeFile(photo.image)}
+                    alt=""
+                    fill
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    className="object-contain"
+                    style={{ objectFit: "contain" }}
+                  />
+                </div>
                 {images.length > 1 ? (
                   <div className="flex items-center gap-2">
                     <button type="button" aria-label="تصویر قبلی" className="text-muted-foreground hover:text-primary" onClick={() => setSlide((index) => (index + images.length - 1) % images.length)}>
@@ -183,8 +174,8 @@ export function StoreProfile() {
                     </button>
                     <div className="flex gap-2 overflow-x-auto">
                       {images.map((image, index) => (
-                        <button key={image.id} type="button" onClick={() => setSlide(index)} className={`size-16 shrink-0 overflow-hidden rounded-lg border-2 ${index === slide ? "border-primary" : "border-transparent opacity-70"}`}>
-                          <Image src={storeFile(image.image)} alt="" width={128} height={128} className="size-full object-cover" />
+                        <button key={image.id} type="button" onClick={() => setSlide(index)} className={`relative size-16 shrink-0 overflow-hidden rounded-lg border-2 bg-muted ${index === slide ? "border-primary" : "border-transparent opacity-70"}`}>
+                          <Image src={storeFile(image.image)} alt="" fill sizes="64px" className="object-cover" style={{ objectFit: "cover" }} />
                         </button>
                       ))}
                     </div>
@@ -242,9 +233,18 @@ export function StoreProfile() {
             {store.products.map((product) => (
               <article key={product.id} className="flex flex-col gap-3 rounded-xl border p-3">
                 {storeFile(product.image_cover) ? (
-                  <Image src={storeFile(product.image_cover)} alt={product.fa_name} width={640} height={320} className="h-40 w-full rounded-lg object-cover" />
+                  <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
+                    <Image
+                      src={storeFile(product.image_cover)}
+                      alt={product.fa_name}
+                      fill
+                      sizes="(min-width: 1280px) 240px, 45vw"
+                      className="object-contain"
+                      style={{ objectFit: "contain" }}
+                    />
+                  </div>
                 ) : (
-                  <div className="flex h-40 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                  <div className="flex aspect-square items-center justify-center rounded-lg bg-muted text-muted-foreground">
                     <StorefrontIcon className="size-8" />
                   </div>
                 )}

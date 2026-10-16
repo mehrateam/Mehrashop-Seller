@@ -116,6 +116,7 @@ export function ProductStepTwo({ productId }: { productId: number }) {
   return (
     <ProductWizard
       step={2}
+      productId={productId}
       title="اطلاعات و ویژگی‌ها"
       subtitle={productId ? "برند، ویژگی و توضیح کالا" : "اول مرحله قبل را ثبت کنید"}
       backHref={productId ? `/products/new?step=1&product=${productId}` : "/products/new?step=1"}
