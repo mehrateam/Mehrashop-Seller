@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils"
 import {
   canEditDetails,
   categoryLeaves,
+  isOpenDraft,
   categoryOptions,
   categoryPath,
   commissionText,
@@ -52,8 +53,10 @@ export function ProductStepOne({ productId }: { productId: number }) {
   const [productType, setProductType] = useState<"new" | "stock">("new")
   const [original, setOriginal] = useState(false)
   const [fieldsLocked, setFieldsLocked] = useState(false)
+  const [openDraft, setOpenDraft] = useState(false)
   const [needsReview, setNeedsReview] = useState(false)
   const editing = productId > 0
+  const categoryLocked = editing && !openDraft
   const leaf = findCategory(tree, levels[3])
   const stockAllowed = Boolean(leaf && (leaf.is_placeholder || leaf.stock_active))
   const path = categoryPath(tree, levels[3])
@@ -83,6 +86,7 @@ export function ProductStepOne({ productId }: { productId: number }) {
         setTree(categories)
         if (step) {
           const ids = categoryPath(categories, step.main_category || 0).map((node) => node.id)
+          const draft = isOpenDraft(step)
           setFaName(step.fa_name || "")
           setEnName(step.en_name || "")
           setMetaTitle(step.meta_title || "")
@@ -91,9 +95,13 @@ export function ProductStepOne({ productId }: { productId: number }) {
           setSubs(step.sub_category || [])
           setProductType(step.product_type === "stock" ? "stock" : "new")
           setOriginal(Boolean(step.is_original))
-          setFieldsLocked(!canEditDetails(step))
+          setOpenDraft(draft)
+          setFieldsLocked(!draft && !canEditDetails(step))
           setNeedsReview(Boolean(step.needs_seller_review))
           setSavedId(step.id)
+        } else {
+          setOpenDraft(false)
+          setFieldsLocked(false)
         }
         setLoadError("")
       })
@@ -163,7 +171,7 @@ export function ProductStepOne({ productId }: { productId: number }) {
               .finally(() => setSaving(false))
           }}
         >
-          {editing ? (
+          {categoryLocked ? (
             <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 xl:col-span-2">
               <LockSimpleIcon className="mt-0.5 size-5 shrink-0 text-primary" weight="duotone" />
               <div>
@@ -262,7 +270,7 @@ export function ProductStepOne({ productId }: { productId: number }) {
                     <select
                       aria-label={label}
                       className={cn(control, "appearance-none pe-9")}
-                      disabled={editing || (index > 0 && !levels[index - 1])}
+                      disabled={categoryLocked || (index > 0 && !levels[index - 1])}
                       value={levels[index] || ""}
                       onChange={(event) => {
                         const id = Number(event.target.value)
@@ -345,7 +353,7 @@ export function ProductStepOne({ productId }: { productId: number }) {
           </section>
           </div>
 
-          <aside className={cn("flex flex-col gap-4 xl:sticky xl:top-4 xl:col-start-2", editing ? "xl:row-start-2" : "xl:row-start-1")}>
+          <aside className={cn("flex flex-col gap-4 xl:sticky xl:top-4 xl:col-start-2", categoryLocked ? "xl:row-start-2" : "xl:row-start-1")}>
           <section className="rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
             <h2 className="font-semibold">نوع کالا <span className="text-[#DD794F]">*</span></h2>
             <p className="mt-1 text-xs text-muted-foreground">عنوان، اصل بودن و نو یا استوک کالا را یکتا می‌کند</p>

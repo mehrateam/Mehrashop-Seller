@@ -104,6 +104,10 @@ export function categoryLeaves(tree: CategoryNode[]) {
   return rows
 }
 
+export function isOpenDraft(step: { is_completely_added: boolean }) {
+  return !step.is_completely_added
+}
+
 export function canEditDetails(step: Pick<StepOneProduct, "used_placeholder_category" | "is_completely_added" | "status" | "is_placeholder_category">) {
   return (
     step.used_placeholder_category &&
