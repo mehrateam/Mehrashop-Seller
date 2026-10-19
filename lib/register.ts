@@ -38,15 +38,6 @@ function numeric(value: string) {
   return digits(value).replace(/\D/g, "")
 }
 
-function validNationalCode(value: string) {
-  const code = numeric(value)
-  if (!/^\d{10}$/.test(code) || /^(\d)\1{9}$/.test(code)) return false
-  const check = Number(code[9])
-  const sum = [...code.slice(0, 9)].reduce((total, digit, index) => total + Number(digit) * (10 - index), 0)
-  const rest = sum % 11
-  return rest < 2 ? check === rest : check === 11 - rest
-}
-
 export function normalizePhone(value: string) {
   const raw = digits(value).replace(/[\s-]/g, "")
   if (raw.startsWith("+98")) return `0${raw.slice(3)}`
@@ -91,17 +82,13 @@ export function silverError(input: {
   if (input.kind === "genuine") {
     const code = numeric(input.nationalCode)
     if (!/^\d{10}$/.test(code)) return "کد ملی باید ۱۰ رقم باشد"
-    return validNationalCode(code) ? "" : "کد ملی درست نیست"
+    return ""
   }
   if (input.companyName.trim().length < 2) return "نام شرکت را وارد کنید"
   if (!input.companyType) return "نوع شرکت را انتخاب کنید"
   if (!input.registrationNumber.trim()) return "شماره ثبت را وارد کنید"
   const nationalId = numeric(input.nationalId)
-  if (nationalId.length === 10) {
-    if (!validNationalCode(nationalId)) return "کد ملی درست نیست"
-  } else if (!/^\d{11}$/.test(nationalId)) {
-    return "شناسه ملی باید ۱۰ یا ۱۱ رقم باشد"
-  }
+  if (!/^\d{10,11}$/.test(nationalId)) return "شناسه ملی باید ۱۰ یا ۱۱ رقم باشد"
   for (const person of input.people) {
     if (person.name.trim().length < 2) return "نام هر صاحب امضا را بنویسید"
     if (!person.front || !person.back) return "برای هر نفر، روی و پشت کارت ملی را بگذارید"
