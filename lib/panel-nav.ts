@@ -26,7 +26,7 @@ export const panelNavGroups: { label: string; items: PanelNavItem[] }[] = [
     label: "مدیریت",
     items: [
       { href: "/products", label: "محصولات", icon: PackageIcon, sell: true },
-      { href: "/orders", label: "سفارش‌ها", icon: ShoppingCartIcon },
+      { href: "/orders", label: "سفارش‌ها", icon: ShoppingCartIcon, sell: true },
       { href: "/support", label: "پشتیبانی", icon: HeadsetIcon },
       { href: "/store", label: "فروشگاه", icon: StorefrontIcon },
     ],
