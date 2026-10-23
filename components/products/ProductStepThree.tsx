@@ -4,29 +4,28 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { CheckCircleIcon, ImageIcon, ImagesIcon, PlusIcon, VideoCameraIcon, XIcon } from "@phosphor-icons/react"
+import { CheckCircleIcon, CheckIcon, ImageIcon, ImagesIcon, LightbulbIcon, PlusIcon, VideoCameraIcon, WarningCircleIcon, XIcon } from "@phosphor-icons/react"
 import { ProductWizard } from "@/components/products/ProductWizard"
 import { Button } from "@/components/ui/button"
+import { Modal } from "@/components/ui/modal"
 import {
   IMAGE_LIMIT,
   VIDEO_LIMIT,
-  VIDEO_MAX,
+  checkProductImage,
+  checkProductVideo,
   fetchStepThree,
-  imageFileOk,
   saveStepThree,
-  videoFileOk,
   type MediaDraft,
   type MediaItem,
+  type MediaNotice,
 } from "@/lib/product-media"
 import { cn } from "@/lib/utils"
-
-const NOTES = ["عکس اصلی الزامی است و پس‌زمینه آن سفید باشد.", "گالری تا ۱۰ تصویر، با فرمت jpg یا png یا webp.", "ویدیو اختیاری است؛ تا ۳ فایل mp4، هر کدام حداکثر ۱۵ مگابایت."]
 
 export function ProductStepThree({ productId }: { productId: number }) {
   const router = useRouter()
   const [ready, setReady] = useState(false)
   const [loadError, setLoadError] = useState("")
-  const [error, setError] = useState("")
+  const [dialog, setDialog] = useState<(MediaNotice & { ok: boolean }) | null>(null)
   const [saving, setSaving] = useState(false)
   const [coverUrl, setCoverUrl] = useState("")
   const [coverFile, setCoverFile] = useState<MediaDraft | null>(null)
@@ -65,6 +64,55 @@ export function ProductStepThree({ productId }: { productId: number }) {
     }
   }, [productId])
 
+  function warn(notice: MediaNotice) {
+    setDialog({ ok: false, title: notice.title, text: notice.text })
+  }
+
+  async function takeCover(file?: File) {
+    if (!file) return
+    const problem = await checkProductImage(file)
+    if (problem) {
+      warn(problem)
+      return
+    }
+    if (coverFile) URL.revokeObjectURL(coverFile.url)
+    setCoverFile({ file, url: URL.createObjectURL(file) })
+  }
+
+  async function takeGallery(files: File[]) {
+    const room = IMAGE_LIMIT - imageCount
+    const next: MediaDraft[] = []
+    let problem: MediaNotice | null = null
+    for (const file of files) {
+      if (next.length >= room) {
+        problem = problem ?? { title: "تعداد زیاد است", text: "برای یک کالا تا ۱۰ تصویر می‌توانید اضافه کنید." }
+        break
+      }
+      const issue = await checkProductImage(file)
+      if (issue) {
+        problem = problem ?? issue
+        continue
+      }
+      next.push({ file, url: URL.createObjectURL(file) })
+    }
+    if (problem) warn(problem)
+    if (next.length) setNewImages((current) => [...current, ...next])
+  }
+
+  function takeVideo(file?: File) {
+    if (!file) return
+    if (videoCount >= VIDEO_LIMIT) {
+      warn({ title: "تعداد زیاد است", text: "برای یک کالا تا ۳ ویدیو می‌توانید اضافه کنید." })
+      return
+    }
+    const problem = checkProductVideo(file)
+    if (problem) {
+      warn(problem)
+      return
+    }
+    setNewVideos((current) => [...current, { file, url: URL.createObjectURL(file) }])
+  }
+
   return (
     <ProductWizard
       step={3}
@@ -93,11 +141,10 @@ export function ProductStepThree({ productId }: { productId: number }) {
             event.preventDefault()
             if (saving) return
             if (!cover) {
-              setError("عکس اصلی را باید ارسال کنید")
+              warn({ title: "عکس اصلی لازم است", text: "عکس اصلی را باید ارسال کنید." })
               return
             }
             setSaving(true)
-            setError("")
             saveStepThree(productId, {
               cover: coverFile?.file || null,
               images: newImages.map((item) => item.file),
@@ -112,12 +159,24 @@ export function ProductStepThree({ productId }: { productId: number }) {
                 router.push(`/products/new?step=4&product=${productId}`)
               })
               .catch((err: unknown) => {
-                setError(err instanceof Error ? err.message : "ذخیره مدیا انجام نشد")
+                warn({ title: "ذخیره نشد", text: err instanceof Error ? err.message : "ذخیره مدیا انجام نشد." })
               })
               .finally(() => setSaving(false))
           }}
         >
           <div className="flex flex-col gap-4 xl:col-start-1">
+            <div className="flex items-start gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sky-950">
+              <LightbulbIcon className="mt-0.5 size-5 shrink-0 text-sky-500" weight="fill" />
+              <div className="text-sm leading-7">
+                <p className="font-bold">نکته</p>
+                <p>
+                  اندازه عکس اصلی و گالری باید دقیقاً <span className="font-bold">۷۰۰×۷۰۰</span> پیکسل باشد و حجم هر عکس کمتر از <span className="font-bold">۳۰۰ کیلوبایت</span>. پس‌زمینه عکس اصلی سفید باشد.
+                </p>
+                <p>
+                  حجم هر ویدیو حداکثر <span className="font-bold">۱۵ مگابایت</span> است.
+                </p>
+              </div>
+            </div>
             <section className="rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
               <div className="mb-4 flex items-center gap-3">
                 <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -138,12 +197,7 @@ export function ProductStepThree({ productId }: { productId: number }) {
                     <PlusIcon className="size-8" />
                   </span>
                 )}
-                <span className="flex flex-1 flex-col justify-center gap-2 text-xs leading-6 text-muted-foreground">
-                  {NOTES.map((note) => (
-                    <span key={note}>{note}</span>
-                  ))}
-                  <span className="font-medium text-primary">{cover ? "تغییر عکس اصلی" : "انتخاب عکس اصلی"}</span>
-                </span>
+                <span className="flex flex-1 items-center text-sm font-medium text-primary">{cover ? "تغییر عکس اصلی" : "انتخاب عکس اصلی"}</span>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
@@ -151,14 +205,7 @@ export function ProductStepThree({ productId }: { productId: number }) {
                   onChange={(event) => {
                     const file = event.target.files?.[0]
                     event.target.value = ""
-                    if (!file) return
-                    if (!imageFileOk(file)) {
-                      setError("فرمت عکس صحیح نیست")
-                      return
-                    }
-                    setError("")
-                    if (coverFile) URL.revokeObjectURL(coverFile.url)
-                    setCoverFile({ file, url: URL.createObjectURL(file) })
+                    void takeCover(file)
                   }}
                 />
               </label>
@@ -215,12 +262,7 @@ export function ProductStepThree({ productId }: { productId: number }) {
                     onChange={(event) => {
                       const files = Array.from(event.target.files || [])
                       event.target.value = ""
-                      const room = IMAGE_LIMIT - imageCount
-                      const next = files.filter(imageFileOk).slice(0, room).map((file) => ({ file, url: URL.createObjectURL(file) }))
-                      if (files.some((file) => !imageFileOk(file))) setError("فرمت عکس صحیح نیست")
-                      else if (files.length > room) setError("برای یک کالا تا ۱۰ تصویر می‌توانید اضافه کنید")
-                      else setError("")
-                      setNewImages((current) => [...current, ...next])
+                      void takeGallery(files)
                     }}
                   />
                 </label>
@@ -277,17 +319,7 @@ export function ProductStepThree({ productId }: { productId: number }) {
                     onChange={(event) => {
                       const file = event.target.files?.[0]
                       event.target.value = ""
-                      if (!file || videoCount >= VIDEO_LIMIT) return
-                      if (!videoFileOk(file)) {
-                        setError("فرمت ویدیو صحیح نیست")
-                        return
-                      }
-                      if (file.size > VIDEO_MAX) {
-                        setError("حجم هر ویدیو باید حداکثر ۱۵ مگابایت باشد")
-                        return
-                      }
-                      setError("")
-                      setNewVideos((current) => [...current, { file, url: URL.createObjectURL(file) }])
+                      takeVideo(file)
                     }}
                   />
                 </label>
@@ -314,7 +346,6 @@ export function ProductStepThree({ productId }: { productId: number }) {
                 ))}
               </div>
             </section>
-            {error ? <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p> : null}
             <div className="hidden xl:block">
               <Button type="submit" size="lg" className="h-12 w-full rounded-2xl text-base" disabled={saving}>
                 {saving ? "در حال ذخیره..." : "تایید و ادامه"}
@@ -330,6 +361,18 @@ export function ProductStepThree({ productId }: { productId: number }) {
           </div>
         </form>
       )}
+      <Modal open={dialog !== null} onClose={() => setDialog(null)} size="sm">
+        <div className="flex flex-col items-center gap-3 pt-2 text-center">
+          <div className={`grid size-11 place-items-center rounded-full ${dialog?.ok ? "bg-primary/12 text-[#537000]" : "bg-destructive/10 text-destructive"}`}>
+            {dialog?.ok ? <CheckIcon weight="bold" className="size-5" /> : <WarningCircleIcon weight="bold" className="size-5" />}
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight">{dialog?.title}</h2>
+          <p className="mb-1 text-sm text-muted-foreground">{dialog?.text}</p>
+          <Button type="button" onClick={() => setDialog(null)} className="mt-1 min-w-[140px] rounded-xl">
+            متوجه شدم
+          </Button>
+        </div>
+      </Modal>
     </ProductWizard>
   )
 }

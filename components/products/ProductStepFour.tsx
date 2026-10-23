@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { CheckCircleIcon, CoinsIcon, ImageIcon, PackageIcon, PaletteIcon, PlusIcon, XIcon } from "@phosphor-icons/react"
+import { CheckCircleIcon, CheckIcon, CoinsIcon, ImageIcon, LightbulbIcon, PackageIcon, PaletteIcon, PlusIcon, WarningCircleIcon, XIcon } from "@phosphor-icons/react"
 import { ProductWizard } from "@/components/products/ProductWizard"
 import { Button } from "@/components/ui/button"
+import { Modal } from "@/components/ui/modal"
 import {
   addVarietyValue,
   fetchStepFour,
@@ -22,7 +23,7 @@ import {
   type StepFour,
   type VarietyGroup,
 } from "@/lib/product-variety"
-import { imageFileOk } from "@/lib/product-media"
+import { checkProductImage, type MediaNotice } from "@/lib/product-media"
 import { cn } from "@/lib/utils"
 
 const control =
@@ -33,6 +34,7 @@ export function ProductStepFour({ productId }: { productId: number }) {
   const [ready, setReady] = useState(false)
   const [loadError, setLoadError] = useState("")
   const [error, setError] = useState("")
+  const [dialog, setDialog] = useState<(MediaNotice & { ok: boolean }) | null>(null)
   const [saved, setSaved] = useState("")
   const [saving, setSaving] = useState(false)
   const [available, setAvailable] = useState<AvailableVariety[]>([])
@@ -93,6 +95,20 @@ export function ProductStepFour({ productId }: { productId: number }) {
       .then(apply)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : "ذخیره تنوع انجام نشد"))
       .finally(() => setSaving(false))
+  }
+
+  function warn(notice: MediaNotice) {
+    setDialog({ ok: false, title: notice.title, text: notice.text })
+  }
+
+  async function takeVarietyPhoto(valueId: number, currentIds: number[], file?: File) {
+    if (!file) return
+    const problem = await checkProductImage(file)
+    if (problem) {
+      warn(problem)
+      return
+    }
+    run(saveVarietyImages(productId, valueId, currentIds, [file]))
   }
 
   return (
@@ -185,6 +201,15 @@ export function ProductStepFour({ productId }: { productId: number }) {
                       </div>
                       {photoGroups.includes(group.id) ? (
                         <div className="mt-3 flex flex-col gap-2">
+                          <div className="flex items-start gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sky-950">
+                            <LightbulbIcon className="mt-0.5 size-5 shrink-0 text-sky-500" weight="fill" />
+                            <div className="text-sm leading-7">
+                              <p className="font-bold">نکته</p>
+                              <p>
+                                اندازه عکس تنوع باید دقیقاً <span className="font-bold">۷۰۰×۷۰۰</span> پیکسل باشد و حجم آن کمتر از <span className="font-bold">۳۰۰ کیلوبایت</span>.
+                              </p>
+                            </div>
+                          </div>
                           {group.values.map((value) => (
                             <div key={value.id} className="flex flex-wrap items-center gap-2 rounded-2xl border bg-background px-3 py-2.5">
                               <span className="min-w-0 flex-1 truncate text-sm font-medium">{value.value}</span>
@@ -214,12 +239,7 @@ export function ProductStepFour({ productId }: { productId: number }) {
                                   onChange={(event) => {
                                     const file = event.target.files?.[0]
                                     event.target.value = ""
-                                    if (!file) return
-                                    if (!imageFileOk(file)) {
-                                      setError("فرمت عکس صحیح نیست")
-                                      return
-                                    }
-                                    run(saveVarietyImages(productId, value.id, value.images.map((item) => item.id), [file]))
+                                    void takeVarietyPhoto(value.id, value.images.map((item) => item.id), file)
                                   }}
                                 />
                               </label>
@@ -400,6 +420,18 @@ export function ProductStepFour({ productId }: { productId: number }) {
           </div>
         </form>
       )}
+      <Modal open={dialog !== null} onClose={() => setDialog(null)} size="sm">
+        <div className="flex flex-col items-center gap-3 pt-2 text-center">
+          <div className={`grid size-11 place-items-center rounded-full ${dialog?.ok ? "bg-primary/12 text-[#537000]" : "bg-destructive/10 text-destructive"}`}>
+            {dialog?.ok ? <CheckIcon weight="bold" className="size-5" /> : <WarningCircleIcon weight="bold" className="size-5" />}
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight">{dialog?.title}</h2>
+          <p className="mb-1 text-sm text-muted-foreground">{dialog?.text}</p>
+          <Button type="button" onClick={() => setDialog(null)} className="mt-1 min-w-[140px] rounded-xl">
+            متوجه شدم
+          </Button>
+        </div>
+      </Modal>
     </ProductWizard>
   )
 }

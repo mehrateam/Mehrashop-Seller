@@ -7,7 +7,11 @@ type Ok<T> = { message?: unknown; data: T; is_success: boolean }
 
 export const IMAGE_LIMIT = 10
 export const VIDEO_LIMIT = 3
+export const IMAGE_MAX = 300 * 1024
+export const IMAGE_SIDE = 700
 export const VIDEO_MAX = 15 * 1024 * 1024
+
+export type MediaNotice = { title: string; text: string }
 
 export type MediaItem = { id: number; url: string; owned: boolean }
 
@@ -46,6 +50,48 @@ export function imageFileOk(file: File) {
 
 export function videoFileOk(file: File) {
   return file.type === "video/mp4" || file.type === "video/quicktime" || file.type === "video/avi" || file.type === "video/x-msvideo" || /\.(mp4|mov|avi)$/i.test(file.name)
+}
+
+async function imageSize(file: File) {
+  if (typeof createImageBitmap === "function") {
+    const bmp = await createImageBitmap(file)
+    const size = { w: bmp.width, h: bmp.height }
+    bmp.close()
+    return size
+  }
+  const url = URL.createObjectURL(file)
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new window.Image()
+      el.onload = () => resolve(el)
+      el.onerror = () => reject(new Error("خواندن تصویر انجام نشد"))
+      el.src = url
+    })
+    return { w: img.naturalWidth, h: img.naturalHeight }
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
+/** null یعنی معتبر */
+export async function checkProductImage(file: File): Promise<MediaNotice | null> {
+  if (!imageFileOk(file)) return { title: "فرمت نادرست است", text: "فرمت عکس باید jpg یا png یا webp باشد." }
+  if (file.size >= IMAGE_MAX) return { title: "حجم زیاد است", text: "حجم تصویر باید کمتر از ۳۰۰ کیلوبایت باشد." }
+  try {
+    const { w, h } = await imageSize(file)
+    if (w !== IMAGE_SIDE || h !== IMAGE_SIDE) {
+      return { title: "اندازه نادرست است", text: "اندازه تصویر باید دقیقاً ۷۰۰×۷۰۰ پیکسل باشد." }
+    }
+  } catch {
+    return { title: "تصویر نامعتبر است", text: "فایل تصویر خوانده نشد. دوباره انتخاب کنید." }
+  }
+  return null
+}
+
+export function checkProductVideo(file: File): MediaNotice | null {
+  if (!videoFileOk(file)) return { title: "فرمت نادرست است", text: "فرمت ویدیو باید mp4 یا mov یا avi باشد." }
+  if (file.size > VIDEO_MAX) return { title: "حجم زیاد است", text: "حجم هر ویدیو باید حداکثر ۱۵ مگابایت باشد." }
+  return null
 }
 
 export async function fetchStepThree(productId: number) {
