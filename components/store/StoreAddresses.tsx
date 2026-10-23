@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label"
 import { Modal } from "@/components/ui/modal"
 
 const fieldClass = "h-11 rounded-xl border-border bg-muted px-3.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+const labelClass = "text-[13px] font-semibold text-muted-foreground"
 
 const blank = {
   name: "",
@@ -71,9 +72,10 @@ export function StoreAddresses({
   async function onSave(event: FormEvent) {
     event.preventDefault()
     if (!draft) return
-    const postal = latinNumber(draft.postal_code).replace(/\D/g, "")
-    const no = Number(latinNumber(draft.no))
-    const unit = Number(latinNumber(draft.unit))
+    const digits = (value: string) => latinNumber(value).replace(/\D/g, "")
+    const postal = digits(draft.postal_code)
+    const no = digits(draft.no)
+    const unit = digits(draft.unit)
     const problem = !draft.name.trim()
       ? "عنوان شعبه را وارد کنید"
       : !draft.phone_company.trim()
@@ -82,13 +84,11 @@ export function StoreAddresses({
           ? "نشانی پستی را وارد کنید"
           : !draft.province || !draft.city
             ? "استان و شهر را انتخاب کنید"
-            : !no || !unit
-              ? "پلاک و واحد را وارد کنید"
-              : !/^\d{10}$/.test(postal)
-                ? "کد پستی باید ۱۰ رقم و بدون خط تیره باشد"
-                : !lat || !lng
-                  ? "عرض و طول جغرافیایی را وارد کنید"
-                  : ""
+            : postal && !/^\d{10}$/.test(postal)
+              ? "کد پستی باید ۱۰ رقم و بدون خط تیره باشد"
+              : !lat || !lng
+                ? "عرض و طول جغرافیایی را وارد کنید"
+                : ""
     if (problem) {
       onDone({ ok: false, title: "آدرس ناقص است", text: problem })
       return
@@ -101,8 +101,8 @@ export function StoreAddresses({
           address: draft.address.trim(),
           phone_company: draft.phone_company.trim(),
           postal_code: postal,
-          no,
-          unit,
+          no: no ? Number(no) : null,
+          unit: unit ? Number(unit) : null,
           province: Number(draft.province),
           city: Number(draft.city),
           x_coordination: lat,
@@ -225,19 +225,19 @@ export function StoreAddresses({
         <form onSubmit={onSave} className="flex flex-col gap-4">
           <div className="ps-11">
             <h2 className="text-lg font-bold leading-8">{draft?.id ? "ویرایش آدرس" : "آدرس جدید"}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">نشانی شعبه و موقعیت آن روی نقشه</p>
+            <p className="mt-1 text-sm text-muted-foreground">نشانی شعبه و موقعیت آن روی نقشه. فیلدهای ستاره‌دار اجباری است.</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="branch-name" className="text-[13px] font-semibold text-muted-foreground">عنوان شعبه</Label>
+              <Label htmlFor="branch-name" className={labelClass}>عنوان شعبه <span className="text-[#DD794F]">*</span></Label>
               <Input id="branch-name" value={draft?.name || ""} onChange={(event) => setDraft((prev) => prev && { ...prev, name: event.target.value })} className={fieldClass} />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="branch-phone" className="text-[13px] font-semibold text-muted-foreground">شماره تماس</Label>
+              <Label htmlFor="branch-phone" className={labelClass}>شماره تماس <span className="text-[#DD794F]">*</span></Label>
               <Input id="branch-phone" value={draft?.phone_company || ""} onChange={(event) => setDraft((prev) => prev && { ...prev, phone_company: event.target.value })} className={fieldClass} />
             </div>
             <div className="flex flex-col gap-2 sm:col-span-2">
-              <Label htmlFor="branch-address" className="text-[13px] font-semibold text-muted-foreground">نشانی پستی</Label>
+              <Label htmlFor="branch-address" className={labelClass}>نشانی پستی <span className="text-[#DD794F]">*</span></Label>
               <textarea
                 id="branch-address"
                 value={draft?.address || ""}
@@ -245,35 +245,44 @@ export function StoreAddresses({
                 className="min-h-24 w-full rounded-xl border border-border bg-muted px-3.5 py-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               />
             </div>
-            <select
-              aria-label="استان"
-              value={draft?.province || ""}
-              onChange={(event) => setDraft((prev) => prev && { ...prev, province: event.target.value, city: "" })}
-              className={fieldClass}
-            >
-              <option value="">استان</option>
-              {provinces.map((item) => (
-                <option key={item.id} value={item.id}>{item.name}</option>
-              ))}
-            </select>
-            <select
-              aria-label="شهر"
-              value={draft?.city || ""}
-              onChange={(event) => setDraft((prev) => prev && { ...prev, city: event.target.value })}
-              className={fieldClass}
-            >
-              <option value="">شهر</option>
-              {cities.map((item) => (
-                <option key={item.id} value={item.id}>{item.name}</option>
-              ))}
-            </select>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="branch-province" className={labelClass}>استان <span className="text-[#DD794F]">*</span></Label>
+              <select
+                id="branch-province"
+                value={draft?.province || ""}
+                onChange={(event) => setDraft((prev) => prev && { ...prev, province: event.target.value, city: "" })}
+                className={fieldClass}
+              >
+                <option value="">انتخاب استان</option>
+                {provinces.map((item) => (
+                  <option key={item.id} value={item.id}>{item.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="branch-city" className={labelClass}>شهر <span className="text-[#DD794F]">*</span></Label>
+              <select
+                id="branch-city"
+                value={draft?.city || ""}
+                onChange={(event) => setDraft((prev) => prev && { ...prev, city: event.target.value })}
+                className={fieldClass}
+              >
+                <option value="">انتخاب شهر</option>
+                {cities.map((item) => (
+                  <option key={item.id} value={item.id}>{item.name}</option>
+                ))}
+              </select>
+            </div>
             {[
               ["no", "پلاک"],
               ["unit", "واحد"],
               ["postal_code", "کد پستی"],
             ].map(([key, label]) => (
               <div key={key} className="flex flex-col gap-2">
-                <Label htmlFor={`branch-${key}`} className="text-[13px] font-semibold text-muted-foreground">{label}</Label>
+                <Label htmlFor={`branch-${key}`} className={`${labelClass} flex items-center gap-1.5`}>
+                  {label}
+                  <span className="rounded-md bg-background px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-foreground/10">اختیاری</span>
+                </Label>
                 <Input
                   id={`branch-${key}`}
                   inputMode="numeric"
@@ -284,7 +293,7 @@ export function StoreAddresses({
               </div>
             ))}
             <div className="flex flex-col gap-2 sm:col-span-2">
-              <Label className="text-[13px] font-semibold text-muted-foreground">موقعیت روی نقشه</Label>
+              <Label className={labelClass}>موقعیت روی نقشه <span className="text-[#DD794F]">*</span></Label>
               <p className="text-xs text-muted-foreground">روی نقشه کلیک کنید. برای جابه‌جایی بکشید و با چرخ ماوس بزرگ‌نمایی کنید.</p>
               <MapPicker
                 lat={lat}
@@ -301,11 +310,11 @@ export function StoreAddresses({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="branch-lat" className="text-[13px] font-semibold text-muted-foreground">عرض جغرافیایی</Label>
+              <Label htmlFor="branch-lat" className={labelClass}>عرض جغرافیایی <span className="text-[#DD794F]">*</span></Label>
               <Input id="branch-lat" inputMode="decimal" value={draft?.x_coordination || ""} onChange={(event) => setDraft((prev) => prev && { ...prev, x_coordination: event.target.value })} className={fieldClass} />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="branch-lng" className="text-[13px] font-semibold text-muted-foreground">طول جغرافیایی</Label>
+              <Label htmlFor="branch-lng" className={labelClass}>طول جغرافیایی <span className="text-[#DD794F]">*</span></Label>
               <Input id="branch-lng" inputMode="decimal" value={draft?.y_coordination || ""} onChange={(event) => setDraft((prev) => prev && { ...prev, y_coordination: event.target.value })} className={fieldClass} />
             </div>
           </div>

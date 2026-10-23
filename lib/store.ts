@@ -20,8 +20,8 @@ export type BranchInput = {
   address: string
   phone_company: string
   postal_code: string
-  unit: number
-  no: number
+  unit: number | null
+  no: number | null
   city: number
   province: number
   x_coordination: number
