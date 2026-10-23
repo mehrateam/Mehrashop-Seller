@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { CheckCircleIcon, CoinsIcon, PackageIcon, PaletteIcon, PlusIcon, XIcon } from "@phosphor-icons/react"
+import { CheckCircleIcon, CoinsIcon, ImageIcon, PackageIcon, PaletteIcon, PlusIcon, XIcon } from "@phosphor-icons/react"
 import { ProductWizard } from "@/components/products/ProductWizard"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,12 +15,14 @@ import {
   removeVariety,
   removeVarietyValue,
   saveSkus,
+  saveVarietyImages,
   toman,
   type AvailableVariety,
   type SkuRow,
   type StepFour,
   type VarietyGroup,
 } from "@/lib/product-variety"
+import { imageFileOk } from "@/lib/product-media"
 import { cn } from "@/lib/utils"
 
 const control =
@@ -42,6 +45,8 @@ export function ProductStepFour({ productId }: { productId: number }) {
   const [optionId, setOptionId] = useState(0)
   const [samePrice, setSamePrice] = useState(true)
   const [sameCount, setSameCount] = useState(true)
+  const [photoGroups, setPhotoGroups] = useState<number[]>([])
+  const photosReady = useRef(false)
   const choices = available.filter((item) => !groups.some((group) => group.id === item.id))
   const picked = choices.find((item) => item.id === varietyId)
   const canAdd = groups.length < 2 && (!complete || groups.length === 0 || canEdit)
@@ -55,11 +60,16 @@ export function ProductStepFour({ productId }: { productId: number }) {
     setComplete(Boolean(step.complete_structure))
     setCanEdit(Boolean(step.creator_can_edit))
     setRequired(step.creator_variety_info)
+    const linked = photosReady.current ? [] : step.grouped_variety_values.filter((group) => group.values.some((value) => value.images.length)).map((group) => group.id)
+    const alive = new Set(step.grouped_variety_values.map((group) => group.id))
+    photosReady.current = true
+    setPhotoGroups((current) => [...new Set([...current.filter((id) => alive.has(id)), ...linked])])
     setError("")
   }
 
   useEffect(() => {
     if (!productId) return
+    photosReady.current = false
     let alive = true
     fetchStepFour(productId)
       .then((step) => {
@@ -173,16 +183,84 @@ export function ProductStepFour({ productId }: { productId: number }) {
                           </button>
                         ) : null}
                       </div>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {group.values.map((value) => (
-                          <span key={value.id} className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-sm">
-                            {value.value}
-                            <button type="button" disabled={saving} onClick={() => run(removeVarietyValue(productId, value.id))}>
-                              <XIcon className="size-3.5 text-muted-foreground" />
-                            </button>
+                      {photoGroups.includes(group.id) ? (
+                        <div className="mt-3 flex flex-col gap-2">
+                          {group.values.map((value) => (
+                            <div key={value.id} className="flex flex-wrap items-center gap-2 rounded-2xl border bg-background px-3 py-2.5">
+                              <span className="min-w-0 flex-1 truncate text-sm font-medium">{value.value}</span>
+                              {value.images.map((image) => (
+                                <button
+                                  key={image.id}
+                                  type="button"
+                                  disabled={saving}
+                                  aria-label="حذف عکس"
+                                  className="group relative size-11 overflow-hidden rounded-xl border"
+                                  onClick={() => run(saveVarietyImages(productId, value.id, value.images.filter((item) => item.id !== image.id).map((item) => item.id), []))}
+                                >
+                                  <Image src={image.url} alt="" width={44} height={44} unoptimized className="size-full object-cover" />
+                                  <span className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+                                    <XIcon className="size-4 text-white" />
+                                  </span>
+                                </button>
+                              ))}
+                              <label className={cn("inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/5 px-3.5 text-sm text-primary", saving && "pointer-events-none opacity-50")}>
+                                <ImageIcon className="size-4" weight="duotone" />
+                                {value.images.length ? "عکس دیگر" : "انتخاب عکس"}
+                                <input
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/webp"
+                                  className="sr-only"
+                                  disabled={saving}
+                                  onChange={(event) => {
+                                    const file = event.target.files?.[0]
+                                    event.target.value = ""
+                                    if (!file) return
+                                    if (!imageFileOk(file)) {
+                                      setError("فرمت عکس صحیح نیست")
+                                      return
+                                    }
+                                    run(saveVarietyImages(productId, value.id, value.images.map((item) => item.id), [file]))
+                                  }}
+                                />
+                              </label>
+                              <button type="button" disabled={saving} aria-label="حذف مقدار" className="flex size-9 items-center justify-center rounded-xl hover:bg-muted" onClick={() => run(removeVarietyValue(productId, value.id))}>
+                                <XIcon className="size-4 text-muted-foreground" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {group.values.map((value) => (
+                            <span key={value.id} className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-sm">
+                              {value.images[0] ? <Image src={value.images[0].url} alt="" width={20} height={20} unoptimized className="size-5 rounded-full object-cover" /> : null}
+                              {value.value}
+                              <button type="button" disabled={saving} aria-label="حذف مقدار" onClick={() => run(removeVarietyValue(productId, value.id))}>
+                                <XIcon className="size-3.5 text-muted-foreground" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        className={cn("mt-3 flex w-full items-center gap-2.5 rounded-xl border px-2.5 py-2 text-start transition-colors", photoGroups.includes(group.id) ? "border-primary/30 bg-primary/5" : "bg-muted/30 hover:bg-muted/60")}
+                        onClick={() => setPhotoGroups((current) => current.includes(group.id) ? current.filter((id) => id !== group.id) : [...current, group.id])}
+                      >
+                        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                          <ImageIcon className="size-4" weight="duotone" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="flex flex-wrap items-center gap-1.5 text-xs font-semibold">
+                            آپلود عکس
+                            <span className="rounded-full bg-background px-1.5 py-px text-[10px] font-medium text-muted-foreground">اختیاری</span>
                           </span>
-                        ))}
-                      </div>
+                          <span className="mt-0.5 block text-[11px] leading-4 text-muted-foreground">اگر نگذارید، عکس اصلی کالا نشان داده می‌شود</span>
+                        </span>
+                        <span className="shrink-0 rounded-lg bg-background px-2 py-1 text-[11px] font-medium text-primary">
+                          {photoGroups.includes(group.id) ? "بستن" : "افزودن"}
+                        </span>
+                      </button>
                       {options.length ? (
                         <select
                           className={cn(control, "mt-3")}
@@ -310,7 +388,7 @@ export function ProductStepFour({ productId }: { productId: number }) {
                 {saving ? "در حال ذخیره..." : "تایید و ادامه"}
               </Button>
               <p className="mt-2 text-center text-xs leading-6 text-muted-foreground">
-                {complete ? "با تایید، مرحله شرایط کالا باز می‌شود." : "اول تنوع‌های لازم را کامل کنید."}
+                {complete ? "عکس تنوع اختیاری است. با تایید، مرحله بعد باز می‌شود." : "اول تنوع‌های لازم را کامل کنید."}
               </p>
             </div>
           </aside>

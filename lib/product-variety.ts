@@ -1,4 +1,5 @@
 import { apiFetch } from "@/lib/auth"
+import { mediaUrl } from "@/lib/orders"
 
 const ROOT = "/dashboard/api/02/products/seller"
 
@@ -8,7 +9,11 @@ export type VarietyOption = { id: number; fa_title: string }
 
 export type AvailableVariety = { id: number; fa_name: string; selectives: VarietyOption[] }
 
-export type VarietyGroup = { id: number; name: string; values: { id: number; value: string }[] }
+export type VarietyImage = { id: number; url: string }
+
+export type VarietyValue = { id: number; value: string; images: VarietyImage[] }
+
+export type VarietyGroup = { id: number; name: string; values: VarietyValue[] }
 
 export type SkuRow = {
   id: number
@@ -43,18 +48,33 @@ function money(value: unknown) {
   return Number.isFinite(amount) ? amount : 0
 }
 
+function pictures(images: { id: number; image?: string; url?: string }[] | undefined): VarietyImage[] {
+  return (images || []).flatMap((image) => {
+    const url = mediaUrl(image.url || image.image || "")
+    return url ? [{ id: image.id, url }] : []
+  })
+}
+
+function groups(rows: { id: number; name: string; values?: { id: number; value: string; images?: { id: number; image?: string; url?: string }[] }[] }[] | undefined): VarietyGroup[] {
+  return (rows || []).map((group) => ({
+    id: group.id,
+    name: group.name,
+    values: (group.values || []).map((value) => ({ id: value.id, value: value.value, images: pictures(value.images) })),
+  }))
+}
+
 export function normalizeStep(step: StepFour): StepFour {
   return {
     ...step,
     available: step.available || [],
-    grouped_variety_values: step.grouped_variety_values || [],
+    grouped_variety_values: groups(step.grouped_variety_values),
     creator_variety_info: step.creator_variety_info || [],
     skus: (step.skus || []).map((sku) => ({
       ...sku,
       price: money(sku.price),
       count: money(sku.count),
       discount_percentage: money(sku.discount_percentage),
-      varieties: sku.varieties || [],
+      varieties: groups(sku.varieties),
     })),
   }
 }
@@ -96,6 +116,14 @@ export function removeVarietyValue(productId: number, valueId: number) {
 
 export function removeVariety(productId: number, varietyId: number) {
   return send(`/step4/${productId}/varieties/${varietyId}/`, "DELETE")
+}
+
+export async function saveVarietyImages(productId: number, valueId: number, currentIds: number[], files: File[]) {
+  const form = new FormData()
+  currentIds.forEach((id) => form.append("current_ids", String(id)))
+  files.forEach((file) => form.append("new_images", file))
+  const res = await apiFetch(`${ROOT}/step4/${productId}/values/${valueId}/images/`, { method: "PUT", body: form })
+  return normalizeStep(await read<StepFour>(res))
 }
 
 export function saveSkus(productId: number, skus: SkuRow[]) {
