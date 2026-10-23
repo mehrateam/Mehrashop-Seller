@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
-import { MagnifyingGlassIcon, PackageIcon } from "@phosphor-icons/react"
+import { LightbulbIcon, MagnifyingGlassIcon, PackageIcon, PlusIcon } from "@phosphor-icons/react"
 import { ProductStepOne } from "@/components/products/ProductStepOne"
 import { ProductStepTwo } from "@/components/products/ProductStepTwo"
 import { ProductStepThree } from "@/components/products/ProductStepThree"
@@ -95,9 +95,10 @@ export function NewProduct() {
       ) : null}
 
       <section className="flex flex-col gap-6 rounded-2xl border bg-card p-4 shadow-sm sm:p-6">
-        <p className="rounded-xl bg-[#ffe8cc] px-4 py-3 text-sm leading-7 text-[#6b4a2a]">
-          چنانچه فروشنده این محصول هستید گزینه انتخاب را بزنید.
-        </p>
+        <div className="flex items-start gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm leading-7 text-sky-950">
+          <LightbulbIcon className="mt-0.5 size-5 shrink-0 text-sky-500" weight="fill" />
+          <p>اگر محصولتان در نتایج جستجو هست، انتخاب را بزنید.</p>
+        </div>
 
         <label className="flex h-11 items-center gap-2 rounded-xl border bg-background px-3 text-sm shadow-sm">
           <MagnifyingGlassIcon className="size-4 shrink-0 text-muted-foreground" />
@@ -172,7 +173,10 @@ export function NewProduct() {
 
         {error ? <p className="text-sm leading-7 text-destructive">{error}</p> : null}
 
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed bg-muted/40 px-4 py-5 text-center">
+          <p className="max-w-md text-sm leading-7 text-muted-foreground">
+            اگر محصول خود را در نتایج جستجو پیدا نمی‌کنید، اضافه کردن محصول را بزنید. لازم نیست اول چیزی انتخاب کنید.
+          </p>
           <Button
             type="button"
             variant="outline"
@@ -183,7 +187,8 @@ export function NewProduct() {
               if (!blocked) router.push("/products/new?step=1")
             }}
           >
-            تایید و ادامه
+            <PlusIcon data-icon="inline-start" />
+            اضافه کردن محصول
           </Button>
         </div>
       </section>
