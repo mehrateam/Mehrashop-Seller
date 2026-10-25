@@ -13,6 +13,7 @@ import {
   fetchStepFour,
   finalPrice,
   groupedDigits,
+  keepSkuEdits,
   removeVariety,
   removeVarietyValue,
   saveSkus,
@@ -45,8 +46,8 @@ export function ProductStepFour({ productId }: { productId: number }) {
   const [required, setRequired] = useState<{ id: number; fa_name: string }[]>([])
   const [varietyId, setVarietyId] = useState(0)
   const [optionId, setOptionId] = useState(0)
-  const [samePrice, setSamePrice] = useState(true)
-  const [sameCount, setSameCount] = useState(true)
+  const [samePrice, setSamePrice] = useState(false)
+  const [sameCount, setSameCount] = useState(false)
   const [photoGroups, setPhotoGroups] = useState<number[]>([])
   const photosReady = useRef(false)
   const choices = available.filter((item) => !groups.some((group) => group.id === item.id))
@@ -55,10 +56,10 @@ export function ProductStepFour({ productId }: { productId: number }) {
   const stock = skus.reduce((sum, sku) => sum + sku.count, 0)
   const priced = skus.length > 0 && skus.every((sku) => sku.price > 0)
 
-  const apply = (step: StepFour) => {
+  const apply = (step: StepFour, fresh = false) => {
     setAvailable(step.available)
     setGroups(step.grouped_variety_values)
-    setSkus(step.skus)
+    setSkus((current) => (fresh ? step.skus : keepSkuEdits(current, step.skus, { price: samePrice, count: sameCount })))
     setComplete(Boolean(step.complete_structure))
     setCanEdit(Boolean(step.creator_can_edit))
     setRequired(step.creator_variety_info)
@@ -75,7 +76,7 @@ export function ProductStepFour({ productId }: { productId: number }) {
     let alive = true
     fetchStepFour(productId)
       .then((step) => {
-        if (alive) apply(step)
+        if (alive) apply(step, true)
       })
       .catch((err: unknown) => {
         if (alive) setLoadError(err instanceof Error ? err.message : "تنوع کالا دریافت نشد")
@@ -355,7 +356,8 @@ export function ProductStepFour({ productId }: { productId: number }) {
                                 inputMode="numeric"
                                 value={key === "discount_percentage" ? sku[key] || "" : groupedDigits(sku[key])}
                                 onChange={(event) => {
-                                  const next = Number(event.target.value.replace(/[^\d]/g, "")) || 0
+                                  const raw = Number(event.target.value.replace(/[^\d]/g, "")) || 0
+                                  const next = key === "discount_percentage" ? Math.min(raw, 100) : raw
                                   setSkus((current) => current.map((row) => (shared || row.id === sku.id ? { ...row, [key]: next } : row)))
                                 }}
                               />

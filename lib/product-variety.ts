@@ -93,6 +93,36 @@ export function toman(value: number) {
   return `${Math.round(value).toLocaleString("fa-IR")} تومان`
 }
 
+function varietyKey(row: SkuRow) {
+  return row.varieties.flatMap((group) => group.values.map((value) => value.id)).sort((a, b) => a - b).join(".")
+}
+
+function uniform(rows: SkuRow[], key: "price" | "count" | "discount_percentage") {
+  if (!rows.length) return undefined
+  const value = rows[0][key]
+  return rows.every((row) => row[key] === value) ? value : undefined
+}
+
+export function keepSkuEdits(current: SkuRow[], next: SkuRow[], shared = { price: false, count: false }): SkuRow[] {
+  const byId = new Map(current.map((row) => [row.id, row]))
+  const byVariety = new Map(current.map((row) => [varietyKey(row), row]))
+  const price = shared.price ? uniform(current, "price") : undefined
+  const discount = shared.price ? uniform(current, "discount_percentage") : undefined
+  const count = shared.count ? uniform(current, "count") : undefined
+  return next.map((row) => {
+    const previous = byId.get(row.id) ?? byVariety.get(varietyKey(row))
+    if (previous) {
+      return { ...row, price: previous.price, count: previous.count, discount_percentage: previous.discount_percentage }
+    }
+    return {
+      ...row,
+      price: price ?? row.price,
+      discount_percentage: discount ?? row.discount_percentage,
+      count: count ?? row.count,
+    }
+  })
+}
+
 async function send(path: string, method: string, body?: unknown) {
   const res = await apiFetch(`${ROOT}${path}`, {
     method,
