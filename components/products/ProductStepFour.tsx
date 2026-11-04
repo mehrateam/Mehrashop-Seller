@@ -24,7 +24,7 @@ import {
   type StepFour,
   type VarietyGroup,
 } from "@/lib/product-variety"
-import { checkProductImage, type MediaNotice } from "@/lib/product-media"
+import { checkProductImage, VARIETY_IMAGE_MAX, VARIETY_IMAGE_SIDE, type MediaNotice } from "@/lib/product-media"
 import { cn } from "@/lib/utils"
 
 const control =
@@ -104,7 +104,7 @@ export function ProductStepFour({ productId }: { productId: number }) {
 
   async function takeVarietyPhoto(valueId: number, currentIds: number[], file?: File) {
     if (!file) return
-    const problem = await checkProductImage(file)
+    const problem = await checkProductImage(file, { side: VARIETY_IMAGE_SIDE, maxBytes: VARIETY_IMAGE_MAX })
     if (problem) {
       warn(problem)
       return

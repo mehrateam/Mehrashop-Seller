@@ -170,7 +170,7 @@ export function ProductStepThree({ productId }: { productId: number }) {
               <div className="text-sm leading-7">
                 <p className="font-bold">نکته</p>
                 <p>
-                  اندازه عکس اصلی و گالری باید دقیقاً <span className="font-bold">۷۰۰×۷۰۰</span> پیکسل باشد و حجم هر عکس کمتر از <span className="font-bold">۳۰۰ کیلوبایت</span>. پس‌زمینه عکس اصلی سفید باشد.
+                  اندازه عکس اصلی و گالری باید دقیقاً <span className="font-bold">۳۰۰۰×۳۰۰۰</span> پیکسل باشد. حجم عکس آزاد است و سرور تصویر را به فرمت <span className="font-bold">WebP</span> تبدیل و بهینه می‌کند. پس‌زمینه عکس اصلی سفید باشد.
                 </p>
                 <p>
                   حجم هر ویدیو حداکثر <span className="font-bold">۱۵ مگابایت</span> است.

@@ -6,9 +6,10 @@ const ROOT = "/dashboard/api/02/products/seller"
 type Ok<T> = { message?: unknown; data: T; is_success: boolean }
 
 export const IMAGE_LIMIT = 10
+export const PRODUCT_IMAGE_SIDE = 3000
+export const VARIETY_IMAGE_SIDE = 700
+export const VARIETY_IMAGE_MAX = 300 * 1024
 export const VIDEO_LIMIT = 3
-export const IMAGE_MAX = 300 * 1024
-export const IMAGE_SIDE = 700
 export const VIDEO_MAX = 15 * 1024 * 1024
 
 export type MediaNotice = { title: string; text: string }
@@ -52,35 +53,41 @@ export function videoFileOk(file: File) {
   return file.type === "video/mp4" || file.type === "video/quicktime" || file.type === "video/avi" || file.type === "video/x-msvideo" || /\.(mp4|mov|avi)$/i.test(file.name)
 }
 
-async function imageSize(file: File) {
+async function imageDimensions(file: File) {
   if (typeof createImageBitmap === "function") {
-    const bmp = await createImageBitmap(file)
-    const size = { w: bmp.width, h: bmp.height }
-    bmp.close()
-    return size
+    const bitmap = await createImageBitmap(file)
+    const dimensions = { width: bitmap.width, height: bitmap.height }
+    bitmap.close()
+    return dimensions
   }
   const url = URL.createObjectURL(file)
   try {
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const el = new window.Image()
-      el.onload = () => resolve(el)
-      el.onerror = () => reject(new Error("خواندن تصویر انجام نشد"))
-      el.src = url
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const element = new window.Image()
+      element.onload = () => resolve(element)
+      element.onerror = () => reject(new Error("خواندن تصویر انجام نشد"))
+      element.src = url
     })
-    return { w: img.naturalWidth, h: img.naturalHeight }
+    return { width: image.naturalWidth, height: image.naturalHeight }
   } finally {
     URL.revokeObjectURL(url)
   }
 }
 
-/** null یعنی معتبر */
-export async function checkProductImage(file: File): Promise<MediaNotice | null> {
+export async function checkProductImage(
+  file: File,
+  options: { side?: number; maxBytes?: number } = {},
+): Promise<MediaNotice | null> {
   if (!imageFileOk(file)) return { title: "فرمت نادرست است", text: "فرمت عکس باید jpg یا png یا webp باشد." }
-  if (file.size >= IMAGE_MAX) return { title: "حجم زیاد است", text: "حجم تصویر باید کمتر از ۳۰۰ کیلوبایت باشد." }
+  if (options.maxBytes && file.size >= options.maxBytes) {
+    return { title: "حجم زیاد است", text: "حجم تصویر باید کمتر از ۳۰۰ کیلوبایت باشد." }
+  }
   try {
-    const { w, h } = await imageSize(file)
-    if (w !== IMAGE_SIDE || h !== IMAGE_SIDE) {
-      return { title: "اندازه نادرست است", text: "اندازه تصویر باید دقیقاً ۷۰۰×۷۰۰ پیکسل باشد." }
+    const { width, height } = await imageDimensions(file)
+    const side = options.side ?? PRODUCT_IMAGE_SIDE
+    if (width !== side || height !== side) {
+      const expected = side
+      return { title: "اندازه نادرست است", text: `اندازه تصویر باید دقیقاً ${expected}×${expected} پیکسل باشد.` }
     }
   } catch {
     return { title: "تصویر نامعتبر است", text: "فایل تصویر خوانده نشد. دوباره انتخاب کنید." }
