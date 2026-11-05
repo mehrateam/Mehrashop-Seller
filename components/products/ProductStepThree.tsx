@@ -70,7 +70,7 @@ export function ProductStepThree({ productId }: { productId: number }) {
 
   async function takeCover(file?: File) {
     if (!file) return
-    const problem = await checkProductImage(file)
+    const problem = await checkProductImage(file, { allowSmaller: true })
     if (problem) {
       warn(problem)
       return
@@ -88,7 +88,7 @@ export function ProductStepThree({ productId }: { productId: number }) {
         problem = problem ?? { title: "تعداد زیاد است", text: "برای یک کالا تا ۱۰ تصویر می‌توانید اضافه کنید." }
         break
       }
-      const issue = await checkProductImage(file)
+      const issue = await checkProductImage(file, { allowSmaller: true })
       if (issue) {
         problem = problem ?? issue
         continue
@@ -170,7 +170,7 @@ export function ProductStepThree({ productId }: { productId: number }) {
               <div className="text-sm leading-7">
                 <p className="font-bold">نکته</p>
                 <p>
-                  اندازه عکس اصلی و گالری باید دقیقاً <span className="font-bold">۳۰۰۰×۳۰۰۰</span> پیکسل باشد. حجم عکس آزاد است و سرور تصویر را به فرمت <span className="font-bold">WebP</span> تبدیل و بهینه می‌کند. پس‌زمینه عکس اصلی سفید باشد.
+                  عرض و ارتفاع عکس اصلی و گالری باید حداکثر <span className="font-bold">۳۰۰۰×۳۰۰۰</span> پیکسل باشد. اندازه‌های کوچک‌تر هم پذیرفته می‌شوند. حجم عکس آزاد است و سرور تصویر را به فرمت <span className="font-bold">WebP</span> تبدیل و بهینه می‌کند. پس‌زمینه عکس اصلی سفید باشد.
                 </p>
                 <p>
                   حجم هر ویدیو حداکثر <span className="font-bold">۱۵ مگابایت</span> است.

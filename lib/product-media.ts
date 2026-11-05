@@ -76,7 +76,7 @@ async function imageDimensions(file: File) {
 
 export async function checkProductImage(
   file: File,
-  options: { side?: number; maxBytes?: number } = {},
+  options: { side?: number; maxBytes?: number; allowSmaller?: boolean } = {},
 ): Promise<MediaNotice | null> {
   if (!imageFileOk(file)) return { title: "فرمت نادرست است", text: "فرمت عکس باید jpg یا png یا webp باشد." }
   if (options.maxBytes && file.size >= options.maxBytes) {
@@ -85,9 +85,11 @@ export async function checkProductImage(
   try {
     const { width, height } = await imageDimensions(file)
     const side = options.side ?? PRODUCT_IMAGE_SIDE
-    if (width !== side || height !== side) {
-      const expected = side
-      return { title: "اندازه نادرست است", text: `اندازه تصویر باید دقیقاً ${expected}×${expected} پیکسل باشد.` }
+    if (options.allowSmaller ? width > side || height > side : width !== side || height !== side) {
+      const text = options.allowSmaller
+        ? `عرض و ارتفاع تصویر نباید بیشتر از ${side} پیکسل باشد (حداکثر ${side}×${side}).`
+        : `اندازه تصویر باید دقیقاً ${side}×${side} پیکسل باشد.`
+      return { title: "اندازه نادرست است", text }
     }
   } catch {
     return { title: "تصویر نامعتبر است", text: "فایل تصویر خوانده نشد. دوباره انتخاب کنید." }
