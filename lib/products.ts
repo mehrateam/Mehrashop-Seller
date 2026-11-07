@@ -9,6 +9,7 @@ export const STATUS_TABS = [
   { id: "pending", label: "در انتظار تایید" },
   { id: "awaiting_category", label: "در انتظار دسته‌بندی" },
   { id: "draft", label: "پیش‌نویس" },
+  { id: "inactive", label: "غیرفعال" },
   { id: "rejected", label: "رد شده" },
 ] as const
 
