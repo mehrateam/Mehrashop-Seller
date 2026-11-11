@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useEffectEvent, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -70,13 +70,15 @@ export function ProductStepFour({ productId }: { productId: number }) {
     setError("")
   }
 
+  const onLoaded = useEffectEvent((step: StepFour) => apply(step, true))
+
   useEffect(() => {
     if (!productId) return
     photosReady.current = false
     let alive = true
     fetchStepFour(productId)
       .then((step) => {
-        if (alive) apply(step, true)
+        if (alive) onLoaded(step)
       })
       .catch((err: unknown) => {
         if (alive) setLoadError(err instanceof Error ? err.message : "تنوع کالا دریافت نشد")
