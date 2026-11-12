@@ -40,7 +40,7 @@ export function WelcomeModal({
   }
 
   const heading = kind === "registered" ? "ثبت‌نام کامل شد" : title
-  const text = kind === "registered" ? "پروفایل، بنر و آدرس فروشگاه ثبت شد." : message
+  const text = kind === "registered" ? "سطح شما برنز است. با اولین محصول نقره و با ۱۰ محصول طلا می‌شوید." : message
 
   return (
     <Modal open={kind !== ""} onClose={close} size="sm">

@@ -15,14 +15,18 @@ export const COMPANY_TYPES = [
 ]
 
 const FIELD_LABELS: Record<string, string> = {
-  username: "نام کاربری",
+  username: "آدرس فروشگاه",
   phone_number: "موبایل",
   national_code: "کد ملی",
   password: "رمز عبور",
   company_name: "نام شرکت",
   national_id: "شناسه ملی",
   registration_number: "شماره ثبت",
-  name_fa: "نام فروشگاه",
+  name_fa: "نام فارسی فروشگاه",
+  first_name: "نام",
+  last_name: "نام خانوادگی",
+  gender: "جنسیت",
+  email: "ایمیل",
 }
 
 export function digits(value: string) {
@@ -54,11 +58,44 @@ export function classifyAccount(account: string) {
   return { phone: "", username: /^[A-Za-z][A-Za-z0-9_]{2,31}$/.test(value) ? value : "" }
 }
 
-export function bronzeError(input: { phone: string; username: string; password: string; logo: File | null; storeId: number | null }) {
-  if (!input.logo && !input.storeId) return "لوگو یا عکس پروفایل را بگذارید"
+export type SignupInput = {
+  phone: string
+  password: string
+  firstName: string
+  lastName: string
+  gender: string
+  nationalCode: string
+  email: string
+  front: File | null
+  back: File | null
+  nameFa: string
+  nameEn: string
+  username: string
+  storePhone: string
+  address: string
+  postal: string
+  website: string
+  instagram: string
+  telegram: string
+  whatsapp: string
+  about: string
+  sellerId: number | null
+  storeId: number | null
+}
+
+export function signupError(input: SignupInput) {
+  if (input.firstName.trim().length < 2) return "نام را وارد کنید"
+  if (input.lastName.trim().length < 2) return "نام خانوادگی را وارد کنید"
+  if (input.gender !== "male" && input.gender !== "female") return "جنسیت را انتخاب کنید"
+  if (!/^\d{10}$/.test(numeric(input.nationalCode))) return "کد ملی باید ۱۰ رقم باشد"
+  if (!input.front || !input.back) return "روی و پشت کارت ملی را بگذارید"
+  if (input.email.trim() && !/^\S+@\S+\.\S+$/.test(input.email.trim())) return "ایمیل درست نیست"
+  if (input.nameFa.trim().length < 2) return "نام فارسی فروشگاه را وارد کنید"
   if (!/^[A-Za-z][A-Za-z0-9_]{2,31}$/.test(input.username.trim())) {
-    return "نام کاربری با حرف انگلیسی شروع شود؛ مثل Sabzineh"
+    return "آدرس فروشگاه با حرف انگلیسی شروع شود؛ مثل Sabzineh"
   }
+  if (!input.address.trim()) return "نشانی کامل فروشگاه را بنویسید"
+  if (!/^\d{10}$/.test(numeric(input.postal))) return "کد پستی باید ۱۰ رقم باشد"
   if (!/^09\d{9}$/.test(normalizePhone(input.phone))) return "شماره موبایل را با ۰۹ وارد کنید"
   if (input.password.length < 8) return "رمز عبور حداقل ۸ کاراکتر است"
   return ""
@@ -159,39 +196,59 @@ export async function checkSellerOtp(phone: string, code: string) {
   return { ok: true as const }
 }
 
-export async function submitBronze(input: {
-  phone: string
-  username: string
-  password: string
-  logo: File | null
-  sellerId: number | null
-  storeId: number | null
-}) {
+export async function submitSignup(input: SignupInput) {
   let sellerId = input.sellerId
   let storeId = input.storeId
   const phone = normalizePhone(input.phone)
   const username = input.username.trim()
+  const postal = numeric(input.postal)
 
   if (!sellerId) {
-    const seller = await send(
-      "/api/oo/seller/signup/genuine/step1/",
-      "POST",
-      JSON.stringify({ phone_number: phone, password: input.password, username }),
-      true
-    )
+    const body = new FormData()
+    body.append("phone_number", phone)
+    body.append("password", input.password)
+    body.append("username", username)
+    body.append("first_name", input.firstName.trim())
+    body.append("last_name", input.lastName.trim())
+    body.append("gender", input.gender)
+    body.append("national_code", numeric(input.nationalCode))
+    if (input.email.trim()) body.append("email", input.email.trim())
+    if (input.front) body.append("the_picture_on_the_national_card", input.front)
+    if (input.back) body.append("the_picture_on_the_back_of_the_national_card", input.back)
+    const seller = await send("/api/oo/seller/signup/genuine/step1/", "POST", body)
     sellerId = readId(seller.data)
     if (!seller.ok || !sellerId) {
       return { ok: false as const, message: messageOf(seller.data, "ساخت حساب انجام نشد"), sellerId, storeId }
     }
+  } else if (input.front && input.back) {
+    const body = new FormData()
+    body.append("first_name", input.firstName.trim())
+    body.append("last_name", input.lastName.trim())
+    body.append("gender", input.gender)
+    body.append("national_code", numeric(input.nationalCode))
+    if (input.email.trim()) body.append("email", input.email.trim())
+    body.append("the_picture_on_the_national_card", input.front)
+    body.append("the_picture_on_the_back_of_the_national_card", input.back)
+    const updated = await send(`/api/oo/seller/signup/genuine/step1/${sellerId}/`, "PUT", body)
+    if (!updated.ok) {
+      return { ok: false as const, message: messageOf(updated.data, "ذخیره مشخصات فروشنده انجام نشد"), sellerId, storeId }
+    }
   }
 
   if (!storeId) {
-    if (!input.logo) return { ok: false as const, message: "لوگو یا عکس پروفایل را بگذارید", sellerId, storeId }
     const body = new FormData()
     body.append("seller", String(sellerId))
-    body.append("name_fa", username)
+    body.append("name_fa", input.nameFa.trim())
     body.append("username", username)
-    body.append("logo", input.logo)
+    if (input.nameEn.trim()) body.append("name_en", input.nameEn.trim())
+    if (input.storePhone.trim()) body.append("phone_company", normalizePhone(input.storePhone) || input.storePhone.trim())
+    body.append("address", input.address.trim())
+    body.append("postal_code", postal)
+    if (input.website.trim()) body.append("website_url", input.website.trim())
+    if (input.instagram.trim()) body.append("instagram", input.instagram.trim())
+    if (input.telegram.trim()) body.append("telegram", input.telegram.trim())
+    if (input.whatsapp.trim()) body.append("whatsapp", normalizePhone(input.whatsapp) || input.whatsapp.trim())
+    if (input.about.trim()) body.append("descriptions", input.about.trim())
     const store = await send("/api/oo/seller/store/register/", "POST", body)
     storeId = readId(store.data)
     if (!store.ok || !storeId) {
@@ -215,12 +272,14 @@ export async function submitSilver(input: {
   front: File
   back: File
   people: { name: string; front: File; back: File }[]
+  gender?: string
 }) {
   const body = new FormData()
   if (input.kind === "genuine") {
     body.append("first_name", input.firstName.trim())
     body.append("last_name", input.lastName.trim())
     body.append("national_code", numeric(input.nationalCode))
+    if (input.gender) body.append("gender", input.gender)
     body.append("the_picture_on_the_national_card", input.front)
     body.append("the_picture_on_the_back_of_the_national_card", input.back)
   } else {

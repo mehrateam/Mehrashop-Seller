@@ -17,6 +17,8 @@ export type SellerUser = {
   bronze_done?: boolean
   gold_done?: boolean
   docs_sent?: boolean
+  profile_done?: boolean
+  product_count?: number
 }
 
 type ApiOk<T> = { message: string; data: T; is_success: boolean }
