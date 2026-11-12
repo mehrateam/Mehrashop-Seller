@@ -10,6 +10,7 @@ export function tierAt(id?: string | null): Tier {
   return TIERS.some((item) => item.id === id) ? (id as Tier) : "bronze"
 }
 
-export function canSell(user: { id?: number } | null | undefined) {
-  return Boolean(user)
+/** فروش فقط بعد از تایید مدیر در ادمین باز است. */
+export function canSell(user: { is_confirmed?: boolean } | null | undefined) {
+  return Boolean(user?.is_confirmed)
 }

@@ -196,7 +196,7 @@ export function RegisterForm() {
       </aside>
 
       <section className="flex min-w-0 flex-1 justify-center px-5 py-6 sm:px-8 lg:items-start lg:py-10">
-        <div className="flex w-full max-w-[520px] flex-col gap-5">
+        <div className="flex w-full max-w-[570px] flex-col gap-5">
           <header className="flex items-center justify-between">
             <Image src="/brand/logo.svg" alt="مهراشاپ" width={345} height={107} className="h-11 w-auto lg:hidden" />
             <Link

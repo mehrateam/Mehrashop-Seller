@@ -117,7 +117,7 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
                       >
                         <item.icon className="size-4.5" />
                         {item.label}
-                        {item.sell && !selling ? <LockSimpleIcon className="ms-auto size-3.5 opacity-60" /> : null}
+                        {!item.free && !selling ? <LockSimpleIcon className="ms-auto size-3.5 opacity-60" /> : null}
                       </Link>
                     </li>
                   )
