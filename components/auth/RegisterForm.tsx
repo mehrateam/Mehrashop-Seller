@@ -13,10 +13,12 @@ import {
   checkSellerOtp,
   classifyAccount,
   digits,
+  fetchSignupProvinces,
   normalizePhone,
   sendSellerOtp,
   signupError,
   submitSignup,
+  type SignupProvince,
 } from "@/lib/register"
 
 const cap = "text-[13px] font-medium text-[#3d4336]"
@@ -26,8 +28,8 @@ const star = <span className="text-destructive">★</span>
 
 const perks = [
   "موارد ستاره‌دار اجباری‌اند؛ بقیه اختیاری",
+  "آدرس صفحه فروشگاه خودکار ساخته می‌شود",
   "بعد از تایید پیامک وارد پنل می‌شوید",
-  "سطح برنز با ثبت‌نام؛ نقره با اولین محصول؛ طلا با ۱۰ محصول",
 ]
 
 export function RegisterForm() {
@@ -37,7 +39,6 @@ export function RegisterForm() {
   const found = classifyAccount(account)
   const [step, setStep] = useState<"form" | "code">("form")
   const [phone, setPhone] = useState(found.phone)
-  const [username, setUsername] = useState(found.username)
   const [seenAccount, setSeenAccount] = useState(account)
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -51,6 +52,9 @@ export function RegisterForm() {
   const [nameFa, setNameFa] = useState("")
   const [nameEn, setNameEn] = useState("")
   const [storePhone, setStorePhone] = useState("")
+  const [province, setProvince] = useState("")
+  const [city, setCity] = useState("")
+  const [provinces, setProvinces] = useState<SignupProvince[]>([])
   const [address, setAddress] = useState("")
   const [postal, setPostal] = useState("")
   const [website, setWebsite] = useState("")
@@ -64,11 +68,11 @@ export function RegisterForm() {
   const [storeId, setStoreId] = useState<number | null>(null)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const cities = provinces.find((item) => String(item.id) === province)?.city ?? []
 
   if (seenAccount !== account) {
     setSeenAccount(account)
     if (found.phone) setPhone(found.phone)
-    if (found.username) setUsername(found.username)
   }
 
   const draft = {
@@ -83,8 +87,9 @@ export function RegisterForm() {
     back,
     nameFa,
     nameEn,
-    username,
     storePhone,
+    province,
+    city,
     address,
     postal,
     website,
@@ -95,6 +100,20 @@ export function RegisterForm() {
     sellerId,
     storeId,
   }
+
+  useEffect(() => {
+    let alive = true
+    fetchSignupProvinces()
+      .then((data) => {
+        if (alive) setProvinces(data)
+      })
+      .catch((err: unknown) => {
+        if (alive) setError(err instanceof Error ? err.message : "خطا در دریافت استان‌ها")
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
 
   useEffect(() => {
     if (wait <= 0) return
@@ -267,24 +286,55 @@ export function RegisterForm() {
                     <input value={nameEn} onChange={(e) => setNameEn(e.target.value)} dir="ltr" className={`${box} text-left`} />
                   </label>
                   <label className="flex flex-col gap-1.5">
-                    <span className={cap}>{star} آدرس اینترنتی دلخواه صفحهٔ فروشگاه</span>
-                    <input
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder="Sabzineh"
-                      dir="ltr"
-                      className={`${box} text-left`}
-                      autoComplete="username"
-                    />
-                    <span className="text-xs text-[#8b917f]">با حرف انگلیسی. برای ورود و آدرس فروشگاه استفاده می‌شود.</span>
-                  </label>
-                  <label className="flex flex-col gap-1.5">
                     <span className={cap}>تلفن فروشگاه</span>
                     <input value={storePhone} onChange={(e) => setStorePhone(e.target.value)} inputMode="tel" className={box} />
                   </label>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="flex flex-col gap-1.5">
+                      <span className={cap}>{star} استان</span>
+                      <select
+                        value={province}
+                        onChange={(e) => {
+                          setProvince(e.target.value)
+                          setCity("")
+                        }}
+                        className={box}
+                      >
+                        <option value="">انتخاب استان</option>
+                        {provinces.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="flex flex-col gap-1.5">
+                      <span className={cap}>{star} شهر</span>
+                      <select
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        disabled={!province}
+                        className={`${box} disabled:opacity-60`}
+                      >
+                        <option value="">{province ? "انتخاب شهر" : "ابتدا استان را انتخاب کنید"}</option>
+                        {cities.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
                   <label className="flex flex-col gap-1.5">
                     <span className={cap}>{star} نشانی کامل فروشگاه</span>
-                    <textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={3} className={`${box} h-auto py-3`} />
+                    <textarea
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      rows={3}
+                      placeholder="روستا، محله، خیابان، کوچه و پلاک"
+                      className={`${box} h-auto py-3`}
+                    />
+                    <span className="text-xs text-[#8b917f]">اگر در روستا هستید، نام روستا را اینجا بنویسید.</span>
                   </label>
                   <label className="flex flex-col gap-1.5">
                     <span className={cap}>{star} کد پستی</span>

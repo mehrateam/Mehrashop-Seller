@@ -18,10 +18,19 @@ import {
   WarningCircleIcon,
   WhatsappLogoIcon,
 } from "@phosphor-icons/react"
-import { changePassword } from "@/lib/auth"
+import { changePassword, ensureSession } from "@/lib/auth"
 import { DiscountPermit } from "@/components/store/DiscountPermit"
 import { StoreAddresses } from "@/components/store/StoreAddresses"
-import { checkStoreMedia, fetchStore, storeFile, updateStore, type SellerStore } from "@/lib/store"
+import {
+  checkStoreMedia,
+  fetchStore,
+  storeFile,
+  storePublicPath,
+  storeUsernameError,
+  updateStore,
+  updateStoreUsername,
+  type SellerStore,
+} from "@/lib/store"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -56,7 +65,14 @@ export function StoreEdit() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [bannerPreview, setBannerPreview] = useState<string | null>(null)
   const blobs = useRef<{ logo: string | null; banner: string | null }>({ logo: null, banner: null })
-  const [form, setForm] = useState({ descriptions: "", instagram: "", telegram: "", whatsapp: "", website_url: "" })
+  const [form, setForm] = useState({
+    username: "",
+    descriptions: "",
+    instagram: "",
+    telegram: "",
+    whatsapp: "",
+    website_url: "",
+  })
   const [pass, setPass] = useState({ password: "", newPassword: "", confirmPassword: "" })
 
   useEffect(() => {
@@ -66,6 +82,7 @@ export function StoreEdit() {
         if (!alive) return
         setStore(data)
         setForm({
+          username: data.username || "",
           descriptions: data.descriptions || "",
           instagram: data.instagram || "",
           telegram: data.telegram || "",
@@ -100,14 +117,30 @@ export function StoreEdit() {
   async function onSave(event: FormEvent) {
     event.preventDefault()
     if (!store) return
+    const nextUsername = form.username.trim()
+    const usernameProblem = storeUsernameError(nextUsername)
+    if (usernameProblem) {
+      setDialog({ ok: false, title: "آدرس فروشگاه", text: usernameProblem })
+      return
+    }
     setSaving(true)
     const body = new FormData()
-    for (const [key, value] of Object.entries(form)) body.append(key, value)
+    body.append("descriptions", form.descriptions)
+    body.append("instagram", form.instagram)
+    body.append("telegram", form.telegram)
+    body.append("whatsapp", form.whatsapp)
+    body.append("website_url", form.website_url)
     if (logo) body.append("logo", logo)
     if (banner) body.append("banner", banner)
     try {
+      let username = store.username || ""
+      if (nextUsername !== (store.username || "")) {
+        username = await updateStoreUsername(nextUsername)
+        await ensureSession()
+      }
       const next = await updateStore(store.id, body)
-      setStore(next)
+      setStore({ ...next, username })
+      setForm((current) => ({ ...current, username }))
       setLogo(null)
       setBanner(null)
       if (blobs.current.logo) URL.revokeObjectURL(blobs.current.logo)
@@ -250,6 +283,35 @@ export function StoreEdit() {
                   }}
                 />
               </label>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl ring-foreground/5">
+          <CardHeader>
+            <CardTitle>آدرس صفحه فروشگاه</CardTitle>
+            <CardDescription>اختیاری است؛ می‌توانید کد خودکار را نگه دارید یا آدرس دلخواه بگذارید.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="username" className="text-[13px] font-semibold text-muted-foreground">
+                آدرس اینترنتی صفحهٔ فروشگاه
+              </Label>
+              <div className="overflow-hidden rounded-xl border border-border bg-muted" dir="ltr">
+                <p className="border-b border-border px-3.5 py-2 text-xs text-muted-foreground">mehrashop.com/seller/</p>
+                <Input
+                  id="username"
+                  value={form.username}
+                  placeholder="M487C2"
+                  onChange={(event) => setForm({ ...form, username: event.target.value.replace(/\s/g, "") })}
+                  className="h-11 rounded-none border-0 bg-transparent px-3.5 text-left shadow-none focus-visible:ring-0"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+              </div>
+              <p className="text-xs leading-6 text-muted-foreground" dir="ltr">
+                {storePublicPath(form.username) || "https://mehrashop.com/seller/…"}
+              </p>
             </div>
           </CardContent>
         </Card>

@@ -48,6 +48,7 @@ export type StoreProduct = {
 export type SellerStore = {
   id: number
   name_fa: string
+  username: string | null
   province: string | null
   city: string | null
   address: string | null
@@ -65,6 +66,22 @@ export type SellerStore = {
   branches: StoreBranch[]
   products: StoreProduct[]
   discount_permit: boolean
+}
+
+export const STORE_PUBLIC_HOST = "mehrashop.com"
+
+export function storePublicPath(username: string) {
+  const slug = username.trim()
+  return slug ? `https://${STORE_PUBLIC_HOST}/seller/${slug}` : ""
+}
+
+export function storeUsernameError(value: string) {
+  const slug = value.trim()
+  if (!slug) return "آدرس صفحه فروشگاه را وارد کنید"
+  if (!/^[A-Za-z][A-Za-z0-9_]{2,31}$/.test(slug)) {
+    return "آدرس با حرف انگلیسی شروع شود؛ مثل M487C2 یا Mehrashop"
+  }
+  return ""
 }
 
 export function storeFile(file: string | null | undefined) {
@@ -170,6 +187,21 @@ export async function updateStore(id: number, body: FormData) {
   })
   if (res.ok) return (await res.json()) as SellerStore
   throw new Error(readError(await res.json().catch(() => null), "ذخیره اطلاعات فروشگاه انجام نشد"))
+}
+
+export async function updateStoreUsername(username: string) {
+  const res = await apiFetch("/api/oo/dashboard/seller-store/store/username/", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: username.trim() }),
+  })
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(readError(data, "ذخیره آدرس فروشگاه انجام نشد"))
+  const slug =
+    data && typeof data === "object" && typeof (data as { username?: unknown }).username === "string"
+      ? (data as { username: string }).username
+      : username.trim()
+  return slug
 }
 
 export async function fetchProvinces() {

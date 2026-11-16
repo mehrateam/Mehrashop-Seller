@@ -27,6 +27,14 @@ const FIELD_LABELS: Record<string, string> = {
   last_name: "نام خانوادگی",
   gender: "جنسیت",
   email: "ایمیل",
+  province: "استان",
+  city: "شهر",
+}
+
+export type SignupProvince = {
+  id: number
+  name: string
+  city: { id: number; name: string }[]
 }
 
 export function digits(value: string) {
@@ -52,10 +60,9 @@ export function normalizePhone(value: string) {
 export function classifyAccount(account: string) {
   const value = account.trim()
   if (/^(?:\+98|0)?9\d{9}$/.test(digits(value).replace(/[\s-]/g, ""))) {
-    return { phone: normalizePhone(value), username: "" }
+    return { phone: normalizePhone(value) }
   }
-  if (/^\S+@\S+\.\S+$/.test(value)) return { phone: "", username: "" }
-  return { phone: "", username: /^[A-Za-z][A-Za-z0-9_]{2,31}$/.test(value) ? value : "" }
+  return { phone: "" }
 }
 
 export type SignupInput = {
@@ -70,8 +77,9 @@ export type SignupInput = {
   back: File | null
   nameFa: string
   nameEn: string
-  username: string
   storePhone: string
+  province: string
+  city: string
   address: string
   postal: string
   website: string
@@ -91,14 +99,22 @@ export function signupError(input: SignupInput) {
   if (!input.front || !input.back) return "روی و پشت کارت ملی را بگذارید"
   if (input.email.trim() && !/^\S+@\S+\.\S+$/.test(input.email.trim())) return "ایمیل درست نیست"
   if (input.nameFa.trim().length < 2) return "نام فارسی فروشگاه را وارد کنید"
-  if (!/^[A-Za-z][A-Za-z0-9_]{2,31}$/.test(input.username.trim())) {
-    return "آدرس فروشگاه با حرف انگلیسی شروع شود؛ مثل Sabzineh"
-  }
+  if (!input.province) return "استان را انتخاب کنید"
+  if (!input.city) return "شهر را انتخاب کنید"
   if (!input.address.trim()) return "نشانی کامل فروشگاه را بنویسید"
   if (!/^\d{10}$/.test(numeric(input.postal))) return "کد پستی باید ۱۰ رقم باشد"
   if (!/^09\d{9}$/.test(normalizePhone(input.phone))) return "شماره موبایل را با ۰۹ وارد کنید"
   if (input.password.length < 8) return "رمز عبور حداقل ۸ کاراکتر است"
   return ""
+}
+
+export async function fetchSignupProvinces() {
+  const result = await send("/api/v1/city/city-list/", "GET")
+  const data = result.data as { is_success?: boolean; data?: SignupProvince[]; message?: string } | null
+  if (!result.ok || !data?.is_success || !Array.isArray(data.data)) {
+    throw new Error(data?.message || "خطا در دریافت استان‌ها")
+  }
+  return data.data
 }
 
 export function silverError(input: {
@@ -200,14 +216,12 @@ export async function submitSignup(input: SignupInput) {
   let sellerId = input.sellerId
   let storeId = input.storeId
   const phone = normalizePhone(input.phone)
-  const username = input.username.trim()
   const postal = numeric(input.postal)
 
   if (!sellerId) {
     const body = new FormData()
     body.append("phone_number", phone)
     body.append("password", input.password)
-    body.append("username", username)
     body.append("first_name", input.firstName.trim())
     body.append("last_name", input.lastName.trim())
     body.append("gender", input.gender)
@@ -239,9 +253,10 @@ export async function submitSignup(input: SignupInput) {
     const body = new FormData()
     body.append("seller", String(sellerId))
     body.append("name_fa", input.nameFa.trim())
-    body.append("username", username)
     if (input.nameEn.trim()) body.append("name_en", input.nameEn.trim())
     if (input.storePhone.trim()) body.append("phone_company", normalizePhone(input.storePhone) || input.storePhone.trim())
+    body.append("province", input.province)
+    body.append("city", input.city)
     body.append("address", input.address.trim())
     body.append("postal_code", postal)
     if (input.website.trim()) body.append("website_url", input.website.trim())
