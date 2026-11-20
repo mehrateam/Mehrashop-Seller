@@ -26,6 +26,12 @@ export const STATUS_CLASS: Record<string, string> = {
   rejected: "bg-destructive/10 text-destructive",
 }
 
+export type RevisionNote = {
+  part: string
+  label: string
+  note: string
+}
+
 export type SellerProduct = {
   id: number
   title: string
@@ -42,6 +48,7 @@ export type SellerProduct = {
   needs_review: boolean
   product_type: string
   is_original: boolean
+  revision_notes?: RevisionNote[]
 }
 
 export type SaleState = "active" | "inactive" | "draft" | "waiting" | "blocked"
@@ -72,6 +79,7 @@ export function saleState(product: SellerProduct): SaleState {
 
 export function editLabel(product: SellerProduct) {
   if (product.status === "awaiting_category") return "مشاهده وضعیت"
+  if (product.status === "rejected" || (product.revision_notes?.length ?? 0) > 0) return "رفع بازنگری"
   if (product.needs_review) return "بررسی اطلاعات"
   return "ویرایش"
 }

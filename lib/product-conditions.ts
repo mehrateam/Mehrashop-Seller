@@ -96,7 +96,11 @@ export async function saveStepFive(productId: number, body: StepFiveInput) {
 }
 
 export function publishText(status: string) {
-  return status === "awaiting_category"
-    ? "محصول ثبت شد و برای تعیین دسته‌بندی به مدیریت ارسال شد"
-    : "محصول با موفقیت انتشار یافت"
+  if (status === "awaiting_category") {
+    return "محصول ثبت شد و برای تعیین دسته‌بندی به مدیریت ارسال شد"
+  }
+  if (status === "pending" || status === "rejected") {
+    return "محصول برای بررسی مجدد به مدیریت ارسال شد"
+  }
+  return "محصول با موفقیت انتشار یافت"
 }

@@ -9,6 +9,7 @@ import {
   PackageIcon,
   PencilSimpleIcon,
   PlusIcon,
+  WarningCircleIcon,
 } from "@phosphor-icons/react"
 import { ProductBulk } from "@/components/products/ProductBulk"
 import { ProductPriceEdit, type PriceEditMode } from "@/components/products/ProductPriceEdit"
@@ -19,6 +20,7 @@ import {
   SALE_CLASS,
   SALE_LABEL,
   SORTS,
+  STATUS_CLASS,
   STATUS_TABS,
   editLabel,
   editLink,
@@ -314,143 +316,204 @@ export function ProductList() {
               product.is_original === false ? "غیر اصل" : "",
               product.product_type === "stock" ? "استوک" : "",
             ].filter(Boolean)
+            const revisions = product.revision_notes || []
+            const needsFix = product.status === "rejected" || revisions.length > 0
             return (
               <article
                 key={product.id}
-                className="flex items-center gap-3 border-b p-3 last:border-0 hover:bg-muted/40 md:grid md:grid-cols-[1.5rem_4rem_minmax(0,1fr)_8rem_5.5rem_8.5rem_8.5rem] md:gap-3 md:px-4"
+                className={cn(
+                  "border-b last:border-0",
+                  needsFix ? "bg-[#FFF8F3]" : "hover:bg-muted/40"
+                )}
               >
-                <input
-                  type="checkbox"
-                  className="tick"
-                  checked={picked.includes(product.id)}
-                  aria-label={`انتخاب ${product.title || "محصول"}`}
-                  onChange={() =>
-                    setPicked((prev) =>
-                      prev.includes(product.id) ? prev.filter((id) => id !== product.id) : [...prev, product.id]
-                    )
-                  }
-                />
-                <div className="relative size-16 shrink-0">
-                  {image ? (
-                    <Image src={image} alt="" width={64} height={64} className="size-16 rounded-xl object-cover" />
-                  ) : (
-                    <div className="flex size-16 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-                      <PackageIcon className="size-5" />
-                    </div>
-                  )}
-                  {discount > 0 ? (
-                    <span className="absolute -top-1.5 -start-1.5 rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
-                      {discount.toLocaleString("fa-IR")}%
-                    </span>
-                  ) : null}
-                </div>
-                <div className="flex min-w-0 flex-1 flex-col gap-2 md:contents">
-                  <div className="min-w-0">
-                    <h2 className="truncate text-sm font-semibold">{product.title || "بدون نام"}</h2>
-                    <p className="mt-1 truncate text-xs text-muted-foreground">
-                      {product.category || "بدون دسته‌بندی"} · #{product.id}
-                      {notes.length ? ` · ${notes.join(" · ")}` : ""}
-                    </p>
+                <div className="flex items-center gap-3 p-3 md:grid md:grid-cols-[1.5rem_4rem_minmax(0,1fr)_8rem_5.5rem_8.5rem_8.5rem] md:gap-3 md:px-4">
+                  <input
+                    type="checkbox"
+                    className="tick"
+                    checked={picked.includes(product.id)}
+                    aria-label={`انتخاب ${product.title || "محصول"}`}
+                    onChange={() =>
+                      setPicked((prev) =>
+                        prev.includes(product.id) ? prev.filter((id) => id !== product.id) : [...prev, product.id]
+                      )
+                    }
+                  />
+                  <div className="relative size-16 shrink-0">
+                    {image ? (
+                      <Image src={image} alt="" width={64} height={64} className="size-16 rounded-xl object-cover" />
+                    ) : (
+                      <div className="flex size-16 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                        <PackageIcon className="size-5" />
+                      </div>
+                    )}
+                    {discount > 0 ? (
+                      <span className="absolute -top-1.5 -start-1.5 rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
+                        {discount.toLocaleString("fa-IR")}%
+                      </span>
+                    ) : null}
                   </div>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 md:contents">
-                    <button
-                      type="button"
-                      disabled={locked}
-                      aria-label="ویرایش قیمت"
-                      className={cn(
-                        "group/price relative min-h-9 min-w-[5.5rem] text-start",
-                        locked ? "cursor-default" : "cursor-pointer"
-                      )}
-                      onClick={() => {
-                        if (locked) return
-                        setEditMode("price")
-                        setEdit(product.id)
-                      }}
-                    >
-                      <span
-                        className={cn(
-                          "block transition-opacity duration-150",
-                          !locked && "group-hover/price:opacity-0"
-                        )}
-                      >
-                        <p className="text-sm font-bold text-primary">{productPrice(product)}</p>
-                        {discount > 0 ? (
-                          <p className="text-xs text-muted-foreground line-through">{toman(product.price)}</p>
+                  <div className="flex min-w-0 flex-1 flex-col gap-2 md:contents">
+                    <div className="min-w-0">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <h2 className="truncate text-sm font-semibold">{product.title || "بدون نام"}</h2>
+                        {needsFix ? (
+                          <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-semibold", STATUS_CLASS.rejected)}>
+                            نیاز به بازنگری
+                          </span>
                         ) : null}
-                      </span>
-                      {!locked ? (
-                        <span className="pointer-events-none absolute inset-y-0 start-0 flex items-center opacity-0 transition-opacity duration-150 group-hover/price:opacity-100 group-focus-visible/price:opacity-100">
-                          <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary">
-                            ویرایش قیمت
-                          </span>
-                        </span>
-                      ) : null}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={locked}
-                      aria-label="ویرایش موجودی"
-                      className={cn(
-                        "group/stock relative min-h-9 min-w-[5rem] text-start",
-                        locked ? "cursor-default" : "cursor-pointer"
-                      )}
-                      onClick={() => {
-                        if (locked) return
-                        setEditMode("stock")
-                        setEdit(product.id)
-                      }}
-                    >
-                      <span
-                        className={cn(
-                          "block transition-opacity duration-150",
-                          product.stock ? "text-sm font-medium" : "text-sm font-semibold text-destructive",
-                          !locked && "group-hover/stock:opacity-0"
-                        )}
-                      >
-                        {product.stock ? `${product.stock.toLocaleString("fa-IR")} عدد` : "ناموجود"}
-                      </span>
-                      {!locked ? (
-                        <span className="pointer-events-none absolute inset-y-0 start-0 flex items-center opacity-0 transition-opacity duration-150 group-hover/stock:opacity-100 group-focus-visible/stock:opacity-100">
-                          <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary">
-                            ویرایش موجودی
-                          </span>
-                        </span>
-                      ) : null}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={locked || busy === product.id}
-                      className={cn("w-fit rounded-lg px-2.5 py-1 text-xs font-semibold", SALE_CLASS[state], locked ? "cursor-default" : "cursor-pointer")}
-                      onClick={() => setMenu(product.id)}
-                    >
-                      {busy === product.id ? "..." : SALE_LABEL[state]}
-                    </button>
-                    <div className="flex flex-wrap gap-1.5">
-                      {product.status === "awaiting_category" ? null : (
-                        <a
-                          href={productLink(product.id)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex h-8 items-center gap-1 rounded-lg bg-primary px-2.5 text-xs font-semibold text-primary-foreground"
-                        >
-                          <EyeIcon className="size-3.5" weight="bold" />
-                          مشاهده
-                        </a>
-                      )}
+                      </div>
+                      <p className="mt-1 truncate text-xs text-muted-foreground">
+                        {product.category || "بدون دسته‌بندی"} · #{product.id}
+                        {notes.length ? ` · ${notes.join(" · ")}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 md:contents">
                       <button
                         type="button"
+                        disabled={locked || needsFix}
+                        aria-label="ویرایش قیمت"
                         className={cn(
-                          "inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold",
-                          product.needs_review ? "bg-primary text-primary-foreground" : "border border-primary text-primary"
+                          "group/price relative min-h-9 min-w-[5.5rem] text-start",
+                          locked || needsFix ? "cursor-default" : "cursor-pointer"
                         )}
+                        onClick={() => {
+                          if (locked || needsFix) return
+                          setEditMode("price")
+                          setEdit(product.id)
+                        }}
+                      >
+                        <span
+                          className={cn(
+                            "block transition-opacity duration-150",
+                            !(locked || needsFix) && "group-hover/price:opacity-0"
+                          )}
+                        >
+                          <p className="text-sm font-bold text-primary">{productPrice(product)}</p>
+                          {discount > 0 ? (
+                            <p className="text-xs text-muted-foreground line-through">{toman(product.price)}</p>
+                          ) : null}
+                        </span>
+                        {!(locked || needsFix) ? (
+                          <span className="pointer-events-none absolute inset-y-0 start-0 flex items-center opacity-0 transition-opacity duration-150 group-hover/price:opacity-100 group-focus-visible/price:opacity-100">
+                            <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary">
+                              ویرایش قیمت
+                            </span>
+                          </span>
+                        ) : null}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={locked || needsFix}
+                        aria-label="ویرایش موجودی"
+                        className={cn(
+                          "group/stock relative min-h-9 min-w-[5rem] text-start",
+                          locked || needsFix ? "cursor-default" : "cursor-pointer"
+                        )}
+                        onClick={() => {
+                          if (locked || needsFix) return
+                          setEditMode("stock")
+                          setEdit(product.id)
+                        }}
+                      >
+                        <span
+                          className={cn(
+                            "block transition-opacity duration-150",
+                            product.stock ? "text-sm font-medium" : "text-sm font-semibold text-destructive",
+                            !(locked || needsFix) && "group-hover/stock:opacity-0"
+                          )}
+                        >
+                          {product.stock ? `${product.stock.toLocaleString("fa-IR")} عدد` : "ناموجود"}
+                        </span>
+                        {!(locked || needsFix) ? (
+                          <span className="pointer-events-none absolute inset-y-0 start-0 flex items-center opacity-0 transition-opacity duration-150 group-hover/stock:opacity-100 group-focus-visible/stock:opacity-100">
+                            <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary">
+                              ویرایش موجودی
+                            </span>
+                          </span>
+                        ) : null}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={locked || needsFix || busy === product.id}
+                        className={cn(
+                          "w-fit rounded-lg px-2.5 py-1 text-xs font-semibold",
+                          needsFix ? STATUS_CLASS.rejected : SALE_CLASS[state],
+                          locked || needsFix ? "cursor-default" : "cursor-pointer"
+                        )}
+                        onClick={() => {
+                          if (needsFix) return
+                          setMenu(product.id)
+                        }}
+                      >
+                        {busy === product.id ? "..." : needsFix ? "رد شده" : SALE_LABEL[state]}
+                      </button>
+                      <div className="flex flex-wrap gap-1.5">
+                        {product.status === "awaiting_category" || needsFix ? null : (
+                          <a
+                            href={productLink(product.id)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex h-8 items-center gap-1 rounded-lg bg-primary px-2.5 text-xs font-semibold text-primary-foreground"
+                          >
+                            <EyeIcon className="size-3.5" weight="bold" />
+                            مشاهده
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          className={cn(
+                            "inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold",
+                            needsFix || product.needs_review
+                              ? "bg-primary text-primary-foreground"
+                              : "border border-primary text-primary"
+                          )}
+                          onClick={() => router.push(editLink(product.id))}
+                        >
+                          <PencilSimpleIcon className="size-3.5" weight="bold" />
+                          {editLabel(product)}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {revisions.length ? (
+                  <div className="mx-3 mb-3 rounded-xl border border-[#F0D2C2] bg-white px-3 py-3 md:mx-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-start gap-2.5">
+                        <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#DD794F]/15 text-[#9a4e2c]">
+                          <WarningCircleIcon className="size-4" weight="fill" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-[#9a4e2c]">مدیریت این کالا را برای بازنگری برگرداند</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            موارد زیر را اصلاح کنید و دوباره ارسال کنید
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg bg-[#DD794F] px-3 text-xs font-semibold text-white"
                         onClick={() => router.push(editLink(product.id))}
                       >
                         <PencilSimpleIcon className="size-3.5" weight="bold" />
-                        {editLabel(product)}
+                        اصلاح و ارسال مجدد
                       </button>
                     </div>
+                    <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {revisions.map((item) => (
+                        <li
+                          key={`${product.id}-${item.part}`}
+                          className="rounded-lg bg-[#FFF8F3] px-3 py-2 text-xs leading-6 text-[#6b3d28]"
+                        >
+                          <span className="font-semibold text-[#9a4e2c]">{item.label}</span>
+                          <span className="mx-1 text-[#c4a089]">·</span>
+                          {item.note || "نیاز به اصلاح"}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                </div>
+                ) : null}
               </article>
             )
           })
