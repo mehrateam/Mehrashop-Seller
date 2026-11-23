@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   ArrowRightIcon,
   ClockCountdownIcon,
@@ -13,7 +14,9 @@ import {
 } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { ShamsiDate } from "@/components/ui/shamsi-date"
+import { createTicket, fetchGroups, type SupportGroup } from "@/lib/support"
 import {
+  ASK_STATUSES,
   ORDER_FLOW,
   REJECT_REASONS,
   STATUS_CLASS,
@@ -28,6 +31,7 @@ import {
 } from "@/lib/orders"
 
 export function OrderView({ id }: { id: string }) {
+  const router = useRouter()
   const [order, setOrder] = useState<SellerOrder | null>(null)
   const [loadedId, setLoadedId] = useState("")
   const [error, setError] = useState("")
@@ -37,6 +41,10 @@ export function OrderView({ id }: { id: string }) {
   const [note, setNote] = useState("")
   const [handover, setHandover] = useState("")
   const [tracking, setTracking] = useState("")
+  const [ask, setAsk] = useState<"" | "cancel" | "return">("")
+  const [askNote, setAskNote] = useState("")
+  const [groups, setGroups] = useState<SupportGroup[]>([])
+  const [groupId, setGroupId] = useState("")
   const stepIcons = [ClockCountdownIcon, PackageIcon, SealCheckIcon, TruckIcon]
   const loading = loadedId !== id
   const active = order?.items?.filter((item) => item.status !== "rejected") ?? []
@@ -86,6 +94,51 @@ export function OrderView({ id }: { id: string }) {
     }
     const finalReason = reason === "دلایل دیگر" ? note.trim() : reason
     await run(() => rejectOrderItem(itemId, finalReason, note.trim()))
+  }
+
+  async function openAsk(kind: "cancel" | "return") {
+    setAsk(kind)
+    setAskNote("")
+    setError("")
+    let list = groups
+    if (!list.length) {
+      try {
+        list = await fetchGroups()
+        setGroups(list)
+        if (!list.length) {
+          setError("گروه پشتیبانی فعالی نیست")
+          return
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "گروه پشتیبانی پیدا نشد")
+        return
+      }
+    }
+    const hint = kind === "cancel" ? "لغو" : "مرجوع"
+    const pick = list.find((group) => group.name.includes(hint) || group.name.includes("سفارش")) || list[0]
+    setGroupId(pick ? String(pick.id) : "")
+  }
+
+  async function onAsk(e: FormEvent) {
+    e.preventDefault()
+    if (!askNote.trim() || !groupId) {
+      setError("نوع پشتیبانی و توضیح را وارد کنید")
+      return
+    }
+    const title = ask === "return" ? `درخواست مرجوعی سفارش #${id}` : `درخواست لغو سفارش #${id}`
+    const body = new FormData()
+    body.append("title", title)
+    body.append("group_id", groupId)
+    body.append("text", `${title}\n${askNote.trim()}`)
+    setError("")
+    setBusy(true)
+    try {
+      const ticket = await createTicket(body)
+      router.push(`/support?ticket=${ticket.id}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "ثبت تیکت ناموفق بود")
+      setBusy(false)
+    }
   }
 
   async function onShip(e: FormEvent) {
@@ -173,6 +226,62 @@ export function OrderView({ id }: { id: string }) {
             </ol>
           ) : null}
 
+          {ASK_STATUSES.includes(order.status) ? (
+            <section className="rounded-2xl border bg-card p-5 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="font-semibold">لغو یا مرجوعی</p>
+                  <p className="mt-1 text-sm text-muted-foreground">پشتیبانی این کار را انجام می‌دهد. با ثبت، تیکت همین سفارش باز می‌شود.</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    className={`h-10 rounded-xl bg-destructive/10 px-4 text-destructive hover:bg-destructive/20 ${ask === "cancel" ? "ring-2 ring-destructive/25" : ""}`}
+                    disabled={busy}
+                    onClick={() => openAsk("cancel")}
+                  >
+                    درخواست لغو
+                  </Button>
+                  <Button
+                    type="button"
+                    className={`h-10 rounded-xl bg-amber-100 px-4 text-amber-950 hover:bg-amber-200 ${ask === "return" ? "ring-2 ring-amber-200" : ""}`}
+                    disabled={busy}
+                    onClick={() => openAsk("return")}
+                  >
+                    درخواست مرجوعی
+                  </Button>
+                </div>
+              </div>
+              {ask ? (
+                <form className="mt-4 grid max-w-lg gap-3" onSubmit={onAsk}>
+                  {groups.length > 1 ? (
+                    <label className="flex flex-col gap-1.5 text-sm">
+                      <span className="text-muted-foreground">نوع پشتیبانی</span>
+                      <select value={groupId} onChange={(e) => setGroupId(e.target.value)} className="h-10 rounded-xl border bg-transparent px-3 outline-none">
+                        {groups.map((group) => (
+                          <option key={group.id} value={group.id}>{group.name}</option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                  <label className="flex flex-col gap-1.5 text-sm">
+                    <span className="text-muted-foreground">{ask === "return" ? "علت مرجوعی" : "علت لغو"}</span>
+                    <textarea
+                      value={askNote}
+                      onChange={(e) => setAskNote(e.target.value)}
+                      rows={3}
+                      className="rounded-xl border bg-transparent px-3 py-2 outline-none focus-visible:border-primary"
+                    />
+                  </label>
+                  <div className="flex gap-2">
+                    <Button type="submit" className="h-10 rounded-xl px-4" disabled={busy}>ثبت و باز کردن تیکت</Button>
+                    <Button type="button" variant="outline" className="h-10 rounded-xl" disabled={busy} onClick={() => setAsk("")}>انصراف</Button>
+                  </div>
+                </form>
+              ) : null}
+            </section>
+          ) : null}
+
           <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
             <div className="flex flex-wrap items-end justify-between gap-3 border-b bg-primary/5 px-5 py-4">
               <div>
@@ -249,7 +358,7 @@ export function OrderView({ id }: { id: string }) {
                     )}
                   </div>
                   {item.rejection_reason ? (
-                    <p className="mt-2 text-xs font-medium text-destructive">علت رد: {item.rejection_reason}</p>
+                    <p className="mt-2 text-xs font-medium text-destructive">علت: {item.rejection_reason}</p>
                   ) : null}
                   {order.status === "paid" && item.status !== "rejected" ? (
                     rejecting === item.id ? (

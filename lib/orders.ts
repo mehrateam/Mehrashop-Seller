@@ -29,6 +29,8 @@ export const REJECT_REASONS = [
   "دلایل دیگر",
 ]
 
+export const ASK_STATUSES = ["paid", "processing", "ready_for_shipping", "shipped", "delivered"]
+
 export const ORDER_FLOW = [
   { id: "paid", label: "در انتظار تایید" },
   { id: "processing", label: "در حال آماده‌سازی" },
