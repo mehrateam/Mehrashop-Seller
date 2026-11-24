@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
+  CopySimpleIcon,
   EyeIcon,
   MagnifyingGlassIcon,
   PackageIcon,
@@ -12,6 +13,7 @@ import {
   WarningCircleIcon,
 } from "@phosphor-icons/react"
 import { ProductBulk } from "@/components/products/ProductBulk"
+import { ProductClone } from "@/components/products/ProductClone"
 import { ProductPriceEdit, type PriceEditMode } from "@/components/products/ProductPriceEdit"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
@@ -60,6 +62,7 @@ export function ProductList() {
   const [more, setMore] = useState(false)
   const [menu, setMenu] = useState(0)
   const [edit, setEdit] = useState(0)
+  const [cloneId, setCloneId] = useState(0)
   const [editMode, setEditMode] = useState<PriceEditMode>("price")
   const [busy, setBusy] = useState(0)
   const [pickKey, setPickKey] = useState(queryKey)
@@ -76,6 +79,7 @@ export function ProductList() {
   const products = ready ? data.products : null
   const chosen = products?.find((item) => item.id === menu) ?? null
   const editing = products?.find((item) => item.id === edit) ?? null
+  const cloning = products?.find((item) => item.id === cloneId) ?? null
   const chosenState = chosen ? saleState(chosen) : "draft"
   const counts = ready ? data.counts : {}
   const page = ready ? data.page : 0
@@ -282,7 +286,7 @@ export function ProductList() {
             انتخاب همه
           </label>
         ) : null}
-        <div className="hidden items-center border-b bg-muted/50 px-4 py-2.5 text-xs font-medium text-muted-foreground md:grid md:grid-cols-[1.5rem_4rem_minmax(0,1fr)_8rem_5.5rem_8.5rem_8.5rem] md:gap-3">
+        <div className="hidden items-center border-b bg-muted/50 px-4 py-2.5 text-xs font-medium text-muted-foreground md:grid md:grid-cols-[1.5rem_4rem_minmax(0,1fr)_8rem_5.5rem_8.5rem_max-content] md:gap-3">
           <input
             type="checkbox"
             className="tick"
@@ -326,7 +330,7 @@ export function ProductList() {
                   needsFix ? "bg-[#FFF8F3]" : "hover:bg-muted/40"
                 )}
               >
-                <div className="flex items-center gap-3 p-3 md:grid md:grid-cols-[1.5rem_4rem_minmax(0,1fr)_8rem_5.5rem_8.5rem_8.5rem] md:gap-3 md:px-4">
+                <div className="flex items-center gap-3 p-3 md:grid md:grid-cols-[1.5rem_4rem_minmax(0,1fr)_8rem_5.5rem_8.5rem_max-content] md:gap-3 md:px-4">
                   <input
                     type="checkbox"
                     className="tick"
@@ -447,7 +451,7 @@ export function ProductList() {
                       >
                         {busy === product.id ? "..." : needsFix ? "رد شده" : SALE_LABEL[state]}
                       </button>
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-1.5 md:flex-nowrap">
                         {product.status === "awaiting_category" || needsFix ? null : (
                           <a
                             href={productLink(product.id)}
@@ -471,6 +475,17 @@ export function ProductList() {
                         >
                           <PencilSimpleIcon className="size-3.5" weight="bold" />
                           {editLabel(product)}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={Boolean(blocked)}
+                          title={blocked || "کپی محصول"}
+                          aria-label="کپی محصول"
+                          className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#d7c3ad] bg-background px-2.5 text-xs font-semibold text-[#a97e4c] transition-colors hover:bg-[#fbf8f4] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#a97e4c] disabled:cursor-not-allowed disabled:opacity-50"
+                          onClick={() => setCloneId(product.id)}
+                        >
+                          <CopySimpleIcon className="size-3.5" weight="bold" />
+                          کپی
                         </button>
                       </div>
                     </div>
@@ -562,6 +577,8 @@ export function ProductList() {
           </div>
         ) : null}
       </Modal>
+
+      <ProductClone product={cloning} open={cloneId > 0} onClose={() => setCloneId(0)} />
 
       <ProductPriceEdit
         productId={edit}

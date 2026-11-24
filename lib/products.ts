@@ -225,6 +225,17 @@ export async function searchCatalog(q: string) {
   return body.data.products
 }
 
+export async function cloneProduct(id: number, copyMedia: boolean) {
+  const res = await apiFetch(`${ROOT}/${id}/clone/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ copy_media: copyMedia }),
+  })
+  const body = (await res.json().catch(() => null)) as Ok<{ id: number }> | null
+  if (!res.ok || !body?.is_success) throw new Error(failText(body?.message))
+  return body.data
+}
+
 export async function chooseProduct(product: number) {
   const res = await apiFetch(`${ROOT}/choose/`, {
     method: "POST",
