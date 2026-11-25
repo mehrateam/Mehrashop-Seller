@@ -33,8 +33,6 @@ import {
 } from "@/lib/product-step"
 import { cn } from "@/lib/utils"
 
-const FREE_AFTER = 3
-
 const control =
   "h-12 w-full rounded-2xl border border-input bg-muted/40 px-4 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/10 disabled:cursor-default disabled:border-transparent disabled:bg-muted disabled:text-foreground disabled:opacity-100"
 
@@ -59,26 +57,29 @@ export function ProductStepTwo({ productId }: { productId: number }) {
   const [age, setAge] = useState("")
   const [tipDraft, setTipDraft] = useState("")
   const [defectDraft, setDefectDraft] = useState("")
+  const [showRequired, setShowRequired] = useState(false)
   const stock = productType === "stock"
-  const brandName = brands.find((item) => item.id === brand)?.fa_name || ""
-  const filledRows = attributePayload(attributes, drafts)
-  const filled = filledRows.length
-  const filledIds = new Set(filledRows.map((row) => row.attribute))
-  const need = attributes.length > FREE_AFTER ? FREE_AFTER + 1 : attributes.length
-  const restOptional = attributes.length > FREE_AFTER && filled > FREE_AFTER
-  const featureLabel = !attributes.length
-    ? "نیازی نیست"
-    : attributes.length > FREE_AFTER
-      ? restOptional
-        ? "بقیه اختیاری"
-        : `${filled.toLocaleString("fa-IR")} از ${need.toLocaleString("fa-IR")}`
-      : `${filled.toLocaleString("fa-IR")} از ${attributes.length.toLocaleString("fa-IR")}`
+  const unknownBrand = brands.find((item) => item.fa_name === "برند ناشناس")
+  const brandName = brands.find((item) => item.id === brand)?.fa_name || "برند ناشناس"
+  const filled = attributePayload(attributes, drafts).length
+  const descriptionEmpty = !plainText(description)
+  const ageEmpty = stock && !age.trim()
+  const requiredMessage = !showRequired
+    ? ""
+    : descriptionEmpty && ageEmpty
+      ? "توضیح کالا و عمر کالا را بنویسید."
+      : descriptionEmpty
+        ? "توضیح کالا را بنویسید."
+        : ageEmpty
+          ? "عمر کالا را بنویسید."
+          : ""
   const summary = [
-    ["برند", brandName || "انتخاب نشده", Boolean(brandName), SketchLogoIcon],
-    ["ویژگی", featureLabel, !attributes.length || filled > 0, SlidersHorizontalIcon],
-    ["ماهیت", natures.length ? (picked.length ? picked.length.toLocaleString("fa-IR") : "انتخاب نشده") : "نیازی نیست", !natures.length || picked.length > 0, LeafIcon],
-    ["نکته مهم", tips.length ? tips.length.toLocaleString("fa-IR") : "نوشته نشده", tips.length > 0, LightbulbIcon],
-    ...(stock ? [["عمر کالا", age.trim() || "نوشته نشده", Boolean(age.trim()), ClockIcon] as const] : []),
+    ["توضیح کالا", descriptionEmpty ? "نوشته نشده" : "نوشته شده", !descriptionEmpty, ArticleIcon],
+    ...(stock ? [["عمر کالا", age.trim() || "نوشته نشده", !ageEmpty, ClockIcon] as const] : []),
+    ["برند", brandName, true, SketchLogoIcon],
+    ["ویژگی", !attributes.length ? "نیازی نیست" : filled ? filled.toLocaleString("fa-IR") : "اختیاری", true, SlidersHorizontalIcon],
+    ["ماهیت", !natures.length ? "نیازی نیست" : picked.length ? picked.length.toLocaleString("fa-IR") : "اختیاری", true, LeafIcon],
+    ["نکته مهم", tips.length ? tips.length.toLocaleString("fa-IR") : "اختیاری", true, LightbulbIcon],
   ] as const
 
   useEffect(() => {
@@ -87,11 +88,13 @@ export function ProductStepTwo({ productId }: { productId: number }) {
     fetchStepTwo(productId)
       .then((step) => {
         if (!alive) return
+        const list = step.available_brands || []
         setAttributes(step.available_attributes || [])
-        setBrands(step.available_brands || [])
+        setBrands(list)
         setNatures(step.available_natures || [])
         setDrafts(draftsFrom(step))
-        setBrand(Number(step.brand || 0))
+        const current = Number(step.brand || 0)
+        setBrand(current || list.find((item) => item.fa_name === "برند ناشناس")?.id || 0)
         setDescription(step.full_description || "")
         setPicked(step.nature || [])
         setTips(step.important_tips || [])
@@ -151,18 +154,13 @@ export function ProductStepTwo({ productId }: { productId: number }) {
               router.push(`/products/new?step=3&product=${productId}`)
               return
             }
-            if (brands.length && !brand) {
-              setError("برند را انتخاب کنید")
+            if (descriptionEmpty || ageEmpty) {
+              setError("")
+              setShowRequired(true)
+              document.getElementById(descriptionEmpty ? "field-description" : "field-age")?.scrollIntoView({ behavior: "smooth", block: "center" })
               return
             }
-            if (!plainText(description) || (stock && !age.trim())) {
-              setError("لطفا همه فیلدهای الزامی را تکمیل کنید")
-              return
-            }
-            if (filled < need) {
-              setError(attributes.length > FREE_AFTER ? "بیشتر از ۳ ویژگی را وارد کنید. بقیه اختیاری است." : "ویژگی‌های کالا را کامل کنید")
-              return
-            }
+            setShowRequired(false)
             setSaving(true)
             setError("")
             saveStepTwo(productId, {
@@ -204,13 +202,7 @@ export function ProductStepTwo({ productId }: { productId: number }) {
                   </span>
                   <div>
                     <h2 className="text-sm font-semibold">ویژگی‌های کالا</h2>
-                    <p className="text-xs text-muted-foreground">
-                      {attributes.length > FREE_AFTER
-                        ? restOptional
-                          ? "بیشتر از ۳ ویژگی وارد شده. بقیه اختیاری است."
-                          : `${(need - filled).toLocaleString("fa-IR")} ویژگی دیگر بنویسید تا بقیه اختیاری شود.`
-                        : "این ویژگی‌ها را کامل کنید"}
-                    </p>
+                    <p className="text-xs text-muted-foreground">اختیاری</p>
                   </div>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -224,7 +216,6 @@ export function ProductStepTwo({ productId }: { productId: number }) {
                           {attr.data_type === "multi_text" && groups.length ? (
                             <span className="text-xs font-normal text-muted-foreground">{groups.length.toLocaleString("fa-IR")} گروه</span>
                           ) : null}
-                          {restOptional && !filledIds.has(attr.id) ? <span className="text-xs font-normal text-muted-foreground">اختیاری</span> : null}
                         </p>
                         {attr.data_type === "selective" ? (
                           <span className="relative block">
@@ -290,17 +281,14 @@ export function ProductStepTwo({ productId }: { productId: number }) {
                 </span>
                 <div>
                   <h2 className="text-sm font-semibold">برند یا نام سازنده</h2>
-                  <p className="text-xs text-muted-foreground">از فهرست همین گروه کالا</p>
+                  <p className="text-xs text-muted-foreground">پیش‌فرض برند ناشناس است</p>
                 </div>
               </div>
               <label className="block">
-                <span className="mb-1.5 flex gap-1 text-sm font-medium">
-                  <span>برند</span>
-                  {brands.length ? <span className="text-[#DD794F]">*</span> : null}
-                </span>
+                <span className="mb-1.5 block text-sm font-medium">برند</span>
                 <span className="relative block">
                   <select className={cn(control, "appearance-none pe-10")} value={brand || ""} disabled={!editable} onChange={(event) => setBrand(Number(event.target.value))}>
-                    <option value="">{brands.length ? "انتخاب کنید" : "برندی برای این گروه نیست"}</option>
+                    {unknownBrand ? null : <option value="">برند ناشناس</option>}
                     {brands.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.fa_name}
@@ -312,7 +300,7 @@ export function ProductStepTwo({ productId }: { productId: number }) {
               </label>
             </section>
 
-            <section className="rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+            <section id="field-description" className={cn("rounded-2xl border bg-card p-4 shadow-sm sm:p-5", showRequired && descriptionEmpty && "border-destructive")}>
               <div className="mb-4 flex items-center gap-3">
                 <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <ArticleIcon className="size-5" weight="duotone" />
@@ -327,7 +315,8 @@ export function ProductStepTwo({ productId }: { productId: number }) {
                   <span>توضیح کالا</span>
                   <span className="text-[#DD794F]">*</span>
                 </p>
-                <RichTextEditor value={description} disabled={!editable} onChange={setDescription} />
+                <RichTextEditor value={description} disabled={!editable} onChange={setDescription} className={showRequired && descriptionEmpty ? "border-destructive" : ""} />
+                {showRequired && descriptionEmpty ? <p className="mt-2 text-sm text-destructive">توضیح کالا را بنویسید.</p> : null}
               </div>
             </section>
 
@@ -339,7 +328,7 @@ export function ProductStepTwo({ productId }: { productId: number }) {
                   </span>
                   <div>
                     <h2 className="text-sm font-semibold">ماهیت کالا</h2>
-                    <p className="text-xs text-muted-foreground">هر کدام که درست است را روشن کنید</p>
+                    <p className="text-xs text-muted-foreground">اختیاری</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -369,7 +358,7 @@ export function ProductStepTwo({ productId }: { productId: number }) {
                 </span>
                 <div>
                   <h2 className="text-sm font-semibold">نکات مهم</h2>
-                  <p className="text-xs text-muted-foreground">حداکثر ۱۰ نکته، هر کدام تا ۳۰۰ حرف</p>
+                  <p className="text-xs text-muted-foreground">اختیاری، حداکثر ۱۰ نکته</p>
                 </div>
               </div>
               {editable ? (
@@ -430,17 +419,28 @@ export function ProductStepTwo({ productId }: { productId: number }) {
             </section>
 
             {stock ? (
-              <section className="rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+              <section id="field-age" className={cn("rounded-2xl border bg-card p-4 shadow-sm sm:p-5", showRequired && ageEmpty && "border-destructive")}>
                 <div className="mb-4 flex items-center gap-3">
                   <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <ClockIcon className="size-5" weight="duotone" />
                   </span>
                   <div>
-                    <h2 className="text-sm font-semibold">عمر کالا</h2>
+                    <h2 className="flex gap-1 text-sm font-semibold">
+                      عمر کالا
+                      <span className="text-[#DD794F]">*</span>
+                    </h2>
                     <p className="text-xs text-muted-foreground">برای کالای استوک الزامی است</p>
                   </div>
                 </div>
-                <input className={control} value={age} disabled={!editable} placeholder="مثال: ۲ سال کارکرد" onChange={(event) => setAge(event.target.value)} />
+                <input
+                  className={cn(control, showRequired && ageEmpty && "border-destructive")}
+                  value={age}
+                  disabled={!editable}
+                  placeholder="مثال: ۲ سال کارکرد"
+                  aria-invalid={showRequired && ageEmpty}
+                  onChange={(event) => setAge(event.target.value)}
+                />
+                {showRequired && ageEmpty ? <p className="mt-2 text-sm text-destructive">عمر کالا را بنویسید.</p> : null}
               </section>
             ) : null}
 
@@ -517,7 +517,9 @@ export function ProductStepTwo({ productId }: { productId: number }) {
           <aside className="flex flex-col gap-4 xl:sticky xl:top-4 xl:col-start-2 xl:row-start-1">
             <section className="rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
               <h2 className="font-semibold">خلاصه این مرحله</h2>
-              <p className="mt-1 text-xs text-muted-foreground">برند، ویژگی، ماهیت و نکته‌های کالا</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {stock ? "توضیح کالا و عمر کالا الزامی است. بقیه اختیاری است." : "فقط توضیح کالا الزامی است. بقیه اختیاری است."}
+              </p>
               <div className="mt-4 grid gap-3">
                 {summary.map(([title, value, done, Icon]) => (
                   <div key={title} className={cn("flex items-center gap-3 rounded-2xl border p-3.5", done ? "border-primary bg-primary/10" : "bg-background")}>
@@ -533,7 +535,9 @@ export function ProductStepTwo({ productId }: { productId: number }) {
                 ))}
               </div>
             </section>
-            {error ? <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p> : null}
+            {requiredMessage || error ? (
+              <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{requiredMessage || error}</p>
+            ) : null}
             <div className="hidden xl:block">
               <Button type="submit" size="lg" className="h-12 w-full rounded-2xl text-base" disabled={saving}>
                 {saving ? "در حال ذخیره..." : "تایید و ادامه"}
@@ -545,6 +549,7 @@ export function ProductStepTwo({ productId }: { productId: number }) {
           </aside>
 
           <div className="fixed inset-x-3 bottom-3 z-30 xl:hidden">
+            {requiredMessage ? <p className="mb-2 rounded-2xl bg-destructive px-4 py-2.5 text-sm text-white shadow-lg">{requiredMessage}</p> : null}
             <Button type="submit" size="lg" className="h-12 w-full rounded-2xl text-base shadow-lg" disabled={saving}>
               {saving ? "در حال ذخیره..." : "تایید و ادامه"}
             </Button>
