@@ -10,6 +10,7 @@ import {
   PlusIcon,
   ShoppingCartIcon,
   StorefrontIcon,
+  WalletIcon,
   type Icon,
 } from "@phosphor-icons/react"
 import { AccessCard } from "@/components/access/AccessCard"
@@ -119,6 +120,12 @@ export default function DashboardHome() {
       label: "تایید سفارش",
       hint: counts.paid ? `${Number(counts.paid).toLocaleString("fa-IR")} سفارش منتظر` : "سفارش معلقی نیست",
       icon: ShoppingCartIcon,
+    },
+    {
+      href: "/finance",
+      label: "تراکنش‌ها",
+      hint: "مبلغ هر فروش",
+      icon: WalletIcon,
     },
     {
       href: "/support",

@@ -1,3 +1,4 @@
+import Link from "next/link"
 import {
   ChatCircleIcon,
   PackageIcon,
@@ -12,8 +13,9 @@ const cards: {
   key: "monthly_total" | "monthly_order_count" | "product_count" | "comment_count"
   title: string
   icon: Icon
+  href?: string
 }[] = [
-  { key: "monthly_total", title: "فروش ماه (تومان)", icon: WalletIcon },
+  { key: "monthly_total", title: "فروش ماه (تومان)", icon: WalletIcon, href: "/finance" },
   { key: "monthly_order_count", title: "سفارش این ماه", icon: ShoppingCartIcon },
   { key: "product_count", title: "محصولات فعال", icon: PackageIcon },
   { key: "comment_count", title: "دیدگاه‌ها", icon: ChatCircleIcon },
@@ -23,7 +25,10 @@ export default function StatsCards({ stats }: { stats: SellerStats | null }) {
   return (
     <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((item) => (
-        <Card key={item.key} className="rounded-2xl ring-foreground/5">
+        <Card key={item.key} className="relative rounded-2xl ring-foreground/5">
+          {item.href ? (
+            <Link href={item.href} className="absolute inset-0 z-10 rounded-2xl" aria-label={item.title} />
+          ) : null}
           <CardContent className="pt-(--card-spacing)">
             <div className="mb-4 flex items-center justify-between gap-3">
               <span className="text-sm font-semibold text-muted-foreground">{item.title}</span>

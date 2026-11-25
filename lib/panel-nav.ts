@@ -5,6 +5,7 @@ import {
   SquaresFourIcon,
   StorefrontIcon,
   ShoppingCartIcon,
+  WalletIcon,
   type Icon,
 } from "@phosphor-icons/react"
 
@@ -26,6 +27,7 @@ export const panelNavGroups: { label: string; items: PanelNavItem[] }[] = [
     items: [
       { href: "/products", label: "محصولات", icon: PackageIcon },
       { href: "/orders", label: "سفارش‌ها", icon: ShoppingCartIcon },
+      { href: "/finance", label: "تراکنش‌ها", icon: WalletIcon },
       { href: "/support", label: "پشتیبانی", icon: HeadsetIcon, free: true },
       { href: "/store", label: "فروشگاه", icon: StorefrontIcon },
     ],
