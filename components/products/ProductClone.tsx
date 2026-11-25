@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
@@ -19,11 +19,12 @@ export function ProductClone({
   const [busy, setBusy] = useState<"with" | "without" | "">("")
   const [error, setError] = useState("")
 
-  useEffect(() => {
-    if (open) return
+  function close() {
+    if (busy) return
     setBusy("")
     setError("")
-  }, [open])
+    onClose()
+  }
 
   function copy(copyMedia: boolean) {
     if (!product || busy) return
@@ -38,7 +39,7 @@ export function ProductClone({
   }
 
   return (
-    <Modal open={open && product !== null} onClose={() => { if (!busy) onClose() }} closeOnBackdrop={!busy} size="sm">
+    <Modal open={open && product !== null} onClose={close} closeOnBackdrop={!busy} size="sm">
       {product ? (
         <div className="flex flex-col gap-4">
           <div>
@@ -64,7 +65,7 @@ export function ProductClone({
               type="button"
               disabled={Boolean(busy)}
               className="h-10 text-sm text-muted-foreground hover:text-foreground disabled:opacity-60"
-              onClick={onClose}
+              onClick={close}
             >
               انصراف
             </button>
